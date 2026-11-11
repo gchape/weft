@@ -1,372 +1,364 @@
-# IASTM — Instrumented Adaptive Software Transactional Memory
+# IASTM
 
-<img width="300" height="115" alt="iastm_logo_v15" src="https://github.com/user-attachments/assets/b63689c6-c583-498f-bd15-193c888f4afa" />
+**Instrumented Adaptive Software Transactional Memory**
 
-A JVM-native STM library for Java 25 that uses a **bytecode-instrumentation agent** to
-automatically inject read/write metrics at class-load time, enabling **adaptive
-optimistic/pessimistic concurrency strategy selection** at runtime — with zero boilerplate
-in application code.
+IASTM is a transactional memory library for **Java 25**. Transactions buffer changes to
+shared `TVar<T>` values and commit them together after validation. Conflicting attempts
+are retried automatically.
 
----
+The core library defaults to optimistic locking. An optional Java agent analyzes read/write
+call sites so the runtime can choose between optimistic and pessimistic write locking.
 
-## Table of contents
+- **Atomic updates** across multiple transactional values, with read-your-writes semantics.
+- **Flat nesting** that shares the outer transaction's buffered changes and retry budget.
+- **Scoped execution** for independent transactions on platform and virtual threads.
+- **Bounded version history** with explicit resizing and snapshot lookup.
 
-- [How it works](#how-it-works)
+## Contents
+
+- [Quick start](#quick-start)
+- [Build and test](#build-and-test)
 - [Architecture](#architecture)
-- [Core components](#core-components)
-    - [IASTM](#iastm)
-    - [TVar](#tvar)
-    - [Tx](#tx)
-    - [RingBufferHistory](#ringbufferhistory)
-    - [TxClock / TVarClock](#txclock--tvarclock)
-    - [AdaptiveBackoff](#adaptivebackoff)
-    - [IASTMAgent / IASTMTransformer](#iastmagent--iastmtransformer)
-- [Concurrency strategies](#concurrency-strategies)
-- [MVCC and snapshot isolation](#mvcc-and-snapshot-isolation)
-- [Deadlock prevention](#deadlock-prevention)
-- [Error handling](#error-handling)
-- [Modules](#modules)
-- [Requirements](#requirements)
-- [Running benchmarks](#running-benchmarks)
+- [Transaction behavior](#transaction-behavior)
+- [Concurrency protocols](#concurrency-protocols)
+- [Version history](#version-history)
+- [Instrumentation agent](#instrumentation-agent)
+- [Errors and retries](#errors-and-retries)
+- [Design patterns](#design-patterns)
 - [Benchmarks](#benchmarks)
 
----
+## Quick start
 
-## How it works
+Wrap related reads and writes in `IASTM.start`. For example, transfer a balance between
+two accounts in one transaction:
 
+```java
+import tech.provokedynamic.iastm.atomic.IASTM;
+import tech.provokedynamic.iastm.atomic.TVar;
+
+TVar<Integer> source = new TVar<>(100);
+TVar<Integer> destination = new TVar<>(0);
+
+IASTM.start(() -> {
+    int balance = IASTM.read(source);
+    if (balance >= 10) {
+        IASTM.write(source, balance - 10);
+        IASTM.write(destination, IASTM.read(destination) + 10);
+    }
+});
 ```
-Your code                        After agent transform
-─────────────────────────────    ──────────────────────────────────────────────
-IASTM.start(() -> {          →   IASTM.start(() -> {
-    int v = IASTM.read(x);           int v = IASTM.read(x);       // readOps=1
-    IASTM.write(x, v + 1);           IASTM.write(x, v + 1);       // writeOps=1
-});                              }, new TxMetrics(1, 1));          // injected ✓
+
+Reads within the transaction see its buffered writes, including `null` values. Other
+transactions can observe the new values after a successful commit.
+
+Bodies may execute more than once. Keep I/O and irreversible side effects outside them,
+and publish computed results after `start` returns. Store immutable values or replace
+objects through `IASTM.write`; mutating a returned object directly bypasses buffering.
+
+## Build and test
+
+Use **JDK 25** and **Maven 3.9+**. Set `JAVA_HOME` to a JDK 25 installation; no preview
+flags are required.
+
+```bash
+mvn clean verify
 ```
 
-At class-load time the agent performs a two-pass static analysis of each lambda body
-passed to `IASTM.start`:
+This runs the core and agent tests and packages all three modules:
 
-1. **Count collection** — counts `IASTM.read` and `IASTM.write` call sites in every
-   method and synthetic lambda, building a call graph of lambda children.
-2. **Count resolution** — propagates counts transitively through nested lambdas so
-   that each `start` site receives the combined read/write total of its entire closure
-   tree.
-3. **Rewrite** — replaces the bare `start(Runnable)` call with a sequence that
-   constructs a `TxMetrics` and calls `start(Runnable, TxMetrics)`.
+| Module            | Artifact                                          | Purpose                           |
+| ----------------- | ------------------------------------------------- | --------------------------------- |
+| `iastm-core`      | `iastm-core/target/iastm-core-1.0-SNAPSHOT.jar`   | Transaction API and runtime       |
+| `iastm-agent`     | `iastm-agent/target/iastm-agent-1.0-SNAPSHOT.jar` | Optional bytecode instrumentation |
+| `iastm-benchmark` | `iastm-benchmark/target/benchmarks.jar`           | Runnable JMH suite                |
 
-`IASTM` then selects **OPTIMISTIC** or **PESSIMISTIC** strategy before the first
-retry attempt, with no runtime overhead in the hot path.
+Generate the aggregated API documentation with strict Javadoc checks:
 
----
+```bash
+mvn javadoc:aggregate
+```
+
+The core uses the SLF4J API; applications choose their logging backend and configuration.
+Logback is a core test dependency. Dependency and plugin versions are centralized in
+[`pom.xml`](pom.xml). Generated JMH harness classes are excluded from API documentation.
 
 ## Architecture
 
+```mermaid
+flowchart TB
+    app["Application<br/>start · read · write"]
+    agent["Optional Java agent<br/>Static TxMetrics"]
+
+    subgraph core["iastm-core · transaction runtime"]
+        api["IASTM<br/>Scope · nesting · retry"]
+        tx["Tx · unit of work<br/>Read/write sets · locks"]
+        optimistic["Optimistic<br/>Lock at commit"]
+        pessimistic["Pessimistic write<br/>Lock on write"]
+        variable["TVar&lt;T&gt;<br/>Value · version · lock"]
+        history["Version history<br/>Circular buffer"]
+
+        api --> tx
+        tx --> optimistic
+        tx --> pessimistic
+        optimistic --> variable
+        pessimistic --> variable
+        variable --- history
+    end
+
+    app --> api
+    agent -. "inject hints" .-> api
+
+    classDef entry fill:#eef2ff,stroke:#6366f1,color:#1e1b4b
+    classDef strategy fill:#ecfdf5,stroke:#10b981,color:#064e3b
+    classDef storage fill:#fff7ed,stroke:#f59e0b,color:#7c2d12
+    classDef optional fill:#f8fafc,stroke:#94a3b8,color:#334155,stroke-dasharray:5 5
+    class app,api,tx entry
+    class optimistic,pessimistic strategy
+    class variable,history storage
+    class agent optional
+    style core fill:#f8fafc,stroke:#cbd5e1,color:#334155
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     Application code                    │
-│   IASTM.start(() -> { IASTM.read(x); IASTM.write(y) }) │
-└───────────────────┬─────────────────────────────────────┘
-                    │ rewritten at class-load by IASTMAgent
-                    ▼
-┌─────────────────────────────────────────────────────────┐
-│  IASTM.start(body, TxMetrics(readOps, writeOps))        │
-│                                                         │
-│  selectStrategy()                                       │
-│  ┌─────────────────┐       ┌──────────────────────┐     │
-│  │   OPTIMISTIC    │       │    PESSIMISTIC        │     │
-│  │                 │       │                       │     │
-│  │ read: MVCC snap │       │ read: tvar.value      │     │
-│  │ write: buffered │       │ write: steal lock     │     │
-│  │ commit: lock+   │       │ commit: validate+     │     │
-│  │  validate+apply │       │  apply, unlock        │     │
-│  └────────┬────────┘       └──────────┬────────────┘     │
-│           └──────────┬───────────────┘                   │
-│                      ▼                                   │
-│            ConcurrentModificationException               │
-│            VersionEvictedException                       │
-│                      │                                   │
-│            AdaptiveBackoff.park()  ──► retry (≤512)      │
-└─────────────────────────────────────────────────────────┘
-                    │ commits via
-                    ▼
-┌─────────────────────────────────────────────────────────┐
-│  TVar  ──  RingBufferHistory (32-slot ring, VarHandle)  │
-│            TxClock (global logical clock)               │
-└─────────────────────────────────────────────────────────┘
+
+The core runs independently of the agent. When enabled, the agent rewrites application
+classes to pass workload hints to the core; it does not bundle the core runtime.
+The benchmark module depends on the core and uses explicit hints for its forced protocols.
+
+| Component                                                                                                          | Responsibility                                                |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| [`IASTM`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/IASTM.java)                                    | Public API, transaction scope, nesting, and retries           |
+| [`Tx`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/Tx.java)                                          | Read versions, pending writes, validation, and lock ownership |
+| [`ConcurrencyProtocol`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/ConcurrencyProtocol.java)        | Read access and write-lock timing                             |
+| [`TVar<T>`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/TVar.java)                                   | Committed value, version, history, and write lock             |
+| [`VersionHistory<T>`](iastm-core/src/main/java/tech/provokedynamic/iastm/mvcc/VersionHistory.java)                 | Version storage and explicit capacity changes                 |
+| [`CircularVersionHistory<T>`](iastm-core/src/main/java/tech/provokedynamic/iastm/mvcc/CircularVersionHistory.java) | Bounded circular history with binary-search lookup            |
+| [`Clock`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/Clock.java)                                    | Separate counters for commit versions and variable identities |
+| [`AdaptiveBackoff`](iastm-core/src/main/java/tech/provokedynamic/iastm/retry/AdaptiveBackoff.java)                 | Retry delays with exponential parking and jitter              |
+
+## Transaction behavior
+
+Each outermost `start` chooses a protocol and creates a retry state. Each attempt then:
+
+1. Creates a fresh `Tx` at the current commit-clock snapshot.
+2. Binds it through `ScopedValue<Tx>` while the body records reads and buffers writes.
+3. Acquires write locks according to the selected protocol and validates every read.
+4. Publishes buffered writes with one commit stamp, or retries if a conflict occurred.
+5. Releases all owned locks before returning, propagating an exception, or backing off.
+
+Read-only transactions validate their reads but do not advance the commit clock.
+Application exceptions and errors discard buffered writes when they escape the outer body.
+
+### Nested transactions
+
+Nested `start` calls join the current attempt. They see the outer transaction's pending
+writes, inherit its protocol, and commit or retry with it. If an exception escapes the
+outer body, the nested writes are discarded too.
+
+There are no savepoints: catching an inner application exception inside the outer body
+does not undo changes already buffered by that inner body.
+
+### Thread scope
+
+An attempt belongs to its executing thread. Independent transactions may run on platform
+or virtual threads; an active attempt must not be shared across concurrent child tasks.
+Scoped bindings end automatically when the body exits.
+
+## Concurrency protocols
+
+| Operation | Optimistic                                 | Pessimistic write                            |
+| --------- | ------------------------------------------ | -------------------------------------------- |
+| Read      | Validated version-history lookup           | Validated committed-value read               |
+| Write     | Buffer the replacement value               | Acquire the write lock, then buffer          |
+| Commit    | Acquire write locks, validate, and publish | Validate and publish with locks already held |
+
+Both protocols validate versions before and after reading, reject values newer than the
+attempt's snapshot, and validate the read set at commit. Pessimistic **write** locking
+does not acquire read locks.
+
+All lock acquisitions use `tryLock()`. Contention aborts the attempt; cleanup releases its
+locks before retrying. Optimistic commits acquire locks in TVar identity order. Pessimistic
+writes acquire them in application order. Neither protocol waits for a lock while holding
+other locks.
+
+### Selecting a protocol
+
+Without metrics, `IASTM.start(body)` uses the optimistic protocol. Supply hints explicitly
+with `IASTM.start(body, new TxMetrics(readOps, writeOps))`, or let the agent inject them.
+
+| Hint                              | Selected protocol |
+| --------------------------------- | ----------------- |
+| No hints or zero total operations | Optimistic        |
+| Read ratio ≥ 80%                  | Optimistic        |
+| Otherwise, write ratio ≥ 60%      | Pessimistic write |
+| Otherwise                         | Optimistic        |
+
+Selection happens once per outermost invocation. Counts must be non-negative; the
+two-argument `TxMetrics` constructor derives the total with overflow checking. The
+three-argument constructor preserves an explicitly supplied normalization total.
+
+## Version history
+
+Every TVar starts with a 32-entry `CircularVersionHistory`, including its initial value at
+version zero. `scan(readPoint)` returns the newest retained value at or before that point.
+A point older than the retained window causes `VersionEvictedException`.
+
+Capacity can be resized explicitly between 32 and 2,048 entries. Expansion preserves
+retained history; shrinking keeps the newest entries. Expansion factors must be finite and
+≥ 1; shrink factors must be finite and in (0, 1]. Capacity does not change automatically.
+
+History access requires coordination with writers and resizing. The runtime uses TVar locks
+and read validation for this purpose. Its protocols conservatively retry when the latest
+TVar version exceeds an attempt's read point, even if an older value is retained. Long-running
+attempts therefore cannot rely on uninterrupted access to old snapshots through later commits.
+
+## Instrumentation agent
+
+The agent uses the JDK **Class-File API** to analyze and rewrite transaction call sites.
+Byte Buddy provides the instrumentation handle for programmatic attachment.
+
+For a directly supplied lambda with one read and one write, the agent replaces
+`IASTM.start(body)` with the equivalent of:
+
+```java
+IASTM.start(() -> {
+    int value = IASTM.read(counter);
+    IASTM.write(counter, value + 1);
+}, new TxMetrics(1, 1));
 ```
 
----
-
-## Core components
-
-### IASTM
-
-`tech.provokedynamic.iastm.atomic.IASTM` is the public API surface. All state is
-propagated via `ScopedValue` (JDK 21+), making the library virtual-thread safe with
-no `ThreadLocal` leaks.
-
-| ScopedValue  | Type              | Purpose                                             |
-|--------------|-------------------|-----------------------------------------------------|
-| `__TX`       | `Tx`              | Active transaction for the current thread scope     |
-| `__STRATEGY` | `Strategy`        | Selected concurrency strategy; inherited by nesting |
-| `__BACKOFF`  | `AdaptiveBackoff` | Retry state shared across all attempts in one start |
-
-**Strategy selection** is performed once per `start(Runnable, TxMetrics)` call using
-the injected metrics:
-
-| Condition                    | Strategy      |
-|------------------------------|---------------|
-| `readOps / totalOps ≥ 80 %`  | `OPTIMISTIC`  |
-| `writeOps / totalOps ≥ 60 %` | `PESSIMISTIC` |
-| Otherwise / no metrics       | `OPTIMISTIC`  |
-
-Nested `start` calls inherit the outer strategy rather than re-selecting, preventing
-strategy thrashing in recursive transactions.
-
-### TVar
-
-`TVar<T>` is the transactional variable. Each instance carries:
-
-- **`id`** — globally unique, monotonically increasing long assigned via `TVarClock` at
-  construction. Used as the sole key for lock-acquisition ordering.
-- **`value`** — the current committed value; `volatile` for visibility without a lock in
-  pessimistic reads.
-- **`version`** — the `TxClock` stamp of the last committed write; `volatile`.
-- **`history`** — a `RingBufferHistory<T>` retaining the 32 most recent `(value, version)`
-  pairs for MVCC snapshot reads.
-- **`lock`** — a `ReentrantLock` acquired eagerly on `write()` in pessimistic mode
-  (ownership stealing) and acquired at commit time in optimistic mode.
-
-### Tx
-
-`Tx` represents a single transaction attempt. It is created fresh on every retry.
-
-| Field       | Type                       | Purpose                                                          |
-|-------------|----------------------------|------------------------------------------------------------------|
-| `readPoint` | `long`                     | `TxClock.current()` at construction; snapshot isolation baseline |
-| `rs`        | `HashMap<TVar<?>, Long>`   | Read-set: observed version per TVar, validated at commit         |
-| `ws`        | `TreeMap<TVar<?>, Object>` | Write-set: sorted by `TVar.id` for deadlock-free locking         |
-| `stolen`    | `List<TVar<?>>`            | Pessimistic locks held; released by `unstealAll()` on abort      |
-
-**Read path (optimistic):** validates `version ≤ readPoint`, checks the TVar is not
-currently locked by another writer, scans `RingBufferHistory` for the snapshot value,
-then re-validates `version` hasn't changed (double-checked locking pattern). Any
-inconsistency throws `ConcurrentModificationException`.
-
-**Read path (pessimistic):** records the current version in the read-set and returns
-`tvar.value` directly. No history scan needed because the write lock prevents concurrent
-mutation.
-
-**Write path (optimistic):** buffers the value in `ws`. Locks are not acquired until
-`commitOptimistic()`.
-
-**Write path (pessimistic):** calls `steal(tvar)` before buffering. `steal` is
-all-or-nothing: if `tryLock()` fails, all previously stolen locks are released
-(`unstealAll()`) and a `ConcurrentModificationException` is thrown to trigger a retry.
-
-**Commit (optimistic):** locks all write-set TVars in `TVar.id` order, validates the full
-read-set, applies writes under a single `TxClock.next()` stamp, then unlocks.
-
-**Commit (pessimistic):** validates the read-set (locks already held), applies writes,
-then releases all stolen locks.
-
-### RingBufferHistory
-
-A pre-allocated, zero-allocation-after-construction MVCC ring buffer.
-
-- Capacity: 32 slots (power of two; `slot = cursor & 31`).
-- `append`: increments `cursor` atomically, writes `versions[slot]` then uses
-  `VarHandle.setRelease` on `values[slot]` for release ordering.
-- `scan(readPoint)`: walks slots from newest to oldest using `VarHandle.getAcquire`,
-  returning the newest entry whose `version ≤ readPoint`. Throws `VersionEvictedException`
-  if the requested snapshot has been overwritten by more than 32 subsequent commits.
-- `VersionEvictedException` is caught by `IASTM.run()` and treated identically to a
-  conflict — the transaction retries with a fresh `readPoint`.
-
-### TxClock / TVarClock
-
-Two separate `AtomicLong`-backed counters with distinct responsibilities:
-
-| Clock       | Scope  | Purpose                                                                              |
-|-------------|--------|--------------------------------------------------------------------------------------|
-| `TxClock`   | Global | Logical commit clock. `current()` sets `readPoint`; `next()` assigns commit version. |
-| `TVarClock` | Global | TVar identity counter. `next()` assigns each TVar's unique `id` at construction.     |
-
-The separation keeps the commit clock free of noise from TVar construction, preserving
-the monotonic invariant that `readPoint ≤ commitVersion` for any write seen by a
-transaction.
-
-### AdaptiveBackoff
-
-Three-phase retry delay to avoid thundering-herd under high contention:
-
-| Attempt range | Behaviour                                          |
-|---------------|----------------------------------------------------|
-| 1 – 8         | `Thread.onSpinWait()` — yield to the CPU scheduler |
-| 9 – 14        | Exponential sleep: 1 ms × 2ⁿ, capped at 16 ms      |
-| 15+           | Exponential sleep: 2 ms × 2ⁿ, capped at 256 ms     |
-
-All phases add uniform random jitter of 0–5 ms to desynchronize competing threads.
-The `AdaptiveBackoff` instance is scoped to a single `start` call via `ScopedValue`
-so the delay grows monotonically across retries rather than resetting on each attempt.
-
-### IASTMAgent / IASTMTransformer
-
-The agent uses the **Java Class-File API** (JDK 24+) for bytecode transformation — no ASM
-dependency. `ByteBuddy` is a compile-scope dependency of `iastm-agent` used only to obtain
-an `Instrumentation` handle via `ByteBuddyAgent.install()` in the programmatic attach path;
-it is not involved in the transformation itself.
-
-`IASTMAgent` supports three activation modes:
-
-| Mode         | Mechanism                                                                                      |
-|--------------|------------------------------------------------------------------------------------------------|
-| Static       | `-javaagent:iastm-agent.jar=com/example/` at JVM startup                                       |
-| Dynamic      | `agentmain` via Attach API on a running JVM                                                    |
-| Programmatic | `IASTMAgent.attach("com/example/")` in tests — uses `ByteBuddyAgent.install()` for self-attach |
-
-The agent argument is a comma-separated list of binary-name prefixes (dots or slashes
-both accepted). Classes outside the configured prefixes are never transformed.
-
-`IASTMTransformer` performs the three-pass rewrite described in
-[How it works](#how-it-works). If a class contains no bare `IASTM.start(Runnable)` call
-sites the transformer returns `null` (no-op, original bytecode retained).
-
----
-
-## Concurrency strategies
-
-### Optimistic
-
-Lock-free reads backed by MVCC snapshots. Conflicts are detected at commit time by
-validating that each read TVar's version has not advanced past `readPoint`. Write locks
-are acquired in `TVar.id` order at commit, held only for the duration of validation and
-write application, then released immediately.
-
-Best for: read-heavy workloads, low-to-medium write contention.
-
-### Pessimistic
-
-Write locks are stolen (eagerly acquired) at the first `IASTM.write()` call. Reads return
-the live `tvar.value` under the assumption that the lock prevents concurrent mutation.
-Read-set validation still runs at commit to catch races on TVars that were read but not
-written.
-
-If any `tryLock()` fails during stealing, all held locks are released immediately and the
-transaction retries — avoiding deadlock without requiring a global lock order at steal
-time. At commit the write locks are already held, so only validation and application
-remain.
-
-Best for: write-heavy workloads where optimistic aborts would dominate.
-
----
-
-## MVCC and snapshot isolation
-
-Every `TVar` maintains a 32-entry ring of past `(value, version)` pairs. A transaction
-reading at `readPoint = T` will always see the value as it was at time `T`, even if the
-TVar has been committed to several times since. This provides **snapshot isolation** with
-no read locks and no blocking between readers and writers.
-
-The 32-slot window is a tunable trade-off: wider windows increase memory usage per TVar
-but reduce `VersionEvictedException` frequency under sustained write pressure on a single
-variable.
-
----
-
-## Deadlock prevention
-
-Write locks are always acquired in ascending `TVar.id` order. Because `TVar.id` values
-are assigned by a single global `AtomicLong` counter at construction, this order is
-consistent across all threads for the lifetime of the JVM. The `TreeMap<TVar<?>, Object>`
-write-set in `Tx` maintains this order automatically via `TVar.compareTo`.
-
-In pessimistic mode, the all-or-nothing `steal` protocol ensures a thread never holds a
-subset of locks while waiting: if any acquisition fails, all held locks are dropped before
-retrying.
-
----
-
-## Error handling
-
-| Exception                         | Cause                                                  | Handling                                              |
-|-----------------------------------|--------------------------------------------------------|-------------------------------------------------------|
-| `ConcurrentModificationException` | Read-set version conflict or lock contention at commit | Caught by `IASTM.run`; retried with backoff           |
-| `VersionEvictedException`         | Snapshot overwritten (>32 writes since `readPoint`)    | Caught by `IASTM.run`; retried with fresh `readPoint` |
-| `MaxRetriesExceededException`     | 512 consecutive retry attempts exhausted               | Propagated to the caller                              |
-
----
-
-## Modules
-
-| Module            | Description                                                          |
-|-------------------|----------------------------------------------------------------------|
-| `iastm-core`      | `IASTM`, `TVar`, `Tx`, clocks, MVCC, backoff, exceptions             |
-| `iastm-agent`     | Java agent + bytecode transformer (`IASTMAgent`, `IASTMTransformer`) |
-| `iastm-benchmark` | JMH benchmark suite (`IASTMBenchmark`)                               |
-
----
-
-## Requirements
-
-- JDK 25 (preview features enabled)
-- Maven 3.9+
-
----
-
-## Running benchmarks
+It resolves directly nested transaction bodies and method references implemented in the
+same class. Debug information and line numbers are preserved. Explicit metrics are left
+unchanged, including during retransformation.
+
+These are **static call-site counts**, not runtime measurements. Loops and branches are
+not weighted by execution frequency. Arbitrary helpers, Runnable values loaded from
+variables, and method references into other classes are not analyzed transitively; use
+explicit metrics when those transaction bodies need hints.
+
+### Enable at startup
 
 ```bash
-java --enable-preview -jar iastm-benchmark/target/benchmarks.jar
+java -javaagent:iastm-agent/target/iastm-agent-1.0-SNAPSHOT.jar=com/example/ \
+     -cp 'your-app.jar:iastm-core/target/iastm-core-1.0-SNAPSHOT.jar:lib/*' com.example.Main
 ```
 
-To run a specific benchmark or filter by name:
+Here `lib/` contains the application's runtime dependencies, including `slf4j-api`.
+Use your application's normal dependency packaging when launching it.
 
-```bash
-java --enable-preview -jar iastm-benchmark/target/benchmarks.jar bankTransfer
-```
+Arguments are comma-separated binary-name prefixes. Dots and slashes are accepted; use
+a trailing separator for a package boundary, such as `com.example.,org.other.`. Empty
+scan scopes are rejected, and the agent always excludes its own implementation package.
 
----
+### Other activation modes
+
+| Mode         | Entry point                         |
+| ------------ | ----------------------------------- |
+| Attach API   | `agentmain` on a running JVM        |
+| Programmatic | `IASTMAgent.attach("com/example/")` |
+
+Attachment depends on JVM support and permissions. Matching modifiable loaded classes are
+retransformed in a batch when supported; otherwise instrumentation applies to future loads.
+Failures are reported through `System.Logger`, and failed transformations retain original
+bytecode.
+
+## Errors and retries
+
+| Condition                               | Outcome                                           |
+| --------------------------------------- | ------------------------------------------------- |
+| Internal transaction conflict           | Release locks, back off, retry                    |
+| `VersionEvictedException`               | Retry with a fresh read point                     |
+| Retry budget exhausted                  | Throw `MaxRetriesExceededException`               |
+| Application exception or error          | Release locks, discard buffered writes, propagate |
+| `read` or `write` outside a transaction | Throw `IllegalStateException`                     |
+
+A user-thrown `ConcurrentModificationException` propagates; it is not treated as an internal
+conflict. An internal conflict invalidates the attempt even if application code catches it.
+
+The budget allows **512 retries after the initial attempt**. Backoff spins on retries 1–8,
+parks for 1–16 ms on retries 9–14, and uses a 2–256 ms exponential ladder from retry 15.
+Parked delays add 0–5 ms of jitter. The same backoff state is retained across retries.
+
+## Design patterns
+
+| Pattern                                                                                                                         | Role in IASTM                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Strategy** / [Replace Conditional with Polymorphism](https://refactoring.com/catalog/replaceConditionalWithPolymorphism.html) | `ConcurrencyProtocol.Optimistic` and `PessimisticWrite` vary reads and lock timing |
+| [Unit of Work](https://martinfowler.com/eaaCatalog/unitOfWork.html), adapted to memory                                          | `Tx` tracks observations and buffered changes, then coordinates commit             |
+| [Encapsulate Collection](https://refactoring.com/catalog/encapsulateCollection.html)                                            | Read versions, pending writes, and owned locks stay private to `Tx`                |
+| **Scoped resource management**                                                                                                  | `AutoCloseable` releases locks on every exit path before retrying                  |
+
+Protocols are stateless enum singletons. Mutable attempt state belongs to `Tx`; retry state
+belongs to the outer invocation. Independent attempts retain object identity, even when
+they share a snapshot timestamp.
+
+<details>
+<summary>Updating imports after the naming refactor</summary>
+
+| Previous type     | Current type             |
+| ----------------- | ------------------------ |
+| `AdaptiveHistory` | `VersionHistory`         |
+| `CircularArray`   | `CircularVersionHistory` |
+| `Protocol`        | `ConcurrencyProtocol`    |
+
+Protocol implementations are `ConcurrencyProtocol.Optimistic` and
+`ConcurrencyProtocol.PessimisticWrite`. The application API remains `IASTM` and `TVar`.
+
+</details>
 
 ## Benchmarks
 
-All benchmarks are in `IASTMBenchmark` (`@State(Scope.Benchmark)`, 3 warmup + 5 measurement
-iterations × 2 forks). Shared state is re-initialized per iteration (`@Setup(Level.Iteration)`)
-to prevent counter overflow or balance depletion from skewing timing.
+List workloads:
 
-**Workloads**
+```bash
+java -jar iastm-benchmark/target/benchmarks.jar -l
+```
 
-| Benchmark group      | Body                                                                                                      | Strategy forced via                                      |
-|----------------------|-----------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
-| `baseline_read`      | Single `IASTM.read` on one `TVar`, result consumed by `Blackhole`                                         | `OPTIMISTIC` (default)                                   |
-| `baseline_increment` | Single `IASTM.read` + `IASTM.write` on one `TVar`                                                         | `OPTIMISTIC` (default)                                   |
-| `multiRead`          | Reads two adjacent accounts from a 64-element array, sums balances; pair chosen randomly per call         | `OPTIMISTIC` (default)                                   |
-| `bankTransfer`       | Reads source balance; if > 0, decrements source and increments destination; both accounts chosen randomly | `TxMetrics(1,9)` → `PESSIMISTIC` or default `OPTIMISTIC` |
-| `mixed_readHeavy`    | Reads 8 consecutive accounts, increments one "sink" account on the opposite side of the array             | `TxMetrics(9,1)` → `OPTIMISTIC`                          |
+Run the full suite and save machine-readable results:
 
-The 64-account pool (`ACCOUNT_COUNT = 64`, each initialized to 100,000) provides enough
-variables to spread contention across threads while keeping conflict rates measurable.
+```bash
+java -jar iastm-benchmark/target/benchmarks.jar -foe true \
+     -rf json -rff iastm-benchmark/target/jmh-results.json
+```
 
-**Results** — JDK 25.0.3, OpenJDK 64-Bit Server VM, AMD Ryzen 5 7535HS (12 threads) @ 4.60 GHz.
-Throughput in ops/s, higher is better.
+To select only transfer workloads, append the filter `bankTransfer` before the options.
+Defaults are **3 × 1 s warmup iterations**, **5 × 2 s measurement iterations**, and
+**2 forks** per workload. Shared state is reset per iteration. The agent is not enabled;
+pessimistic workloads use explicit `TxMetrics(1, 9)` hints.
 
-| Benchmark                     | Threads | ops/s      | Error        |
-|-------------------------------|---------|------------|--------------|
-| `baseline_read_1t`            | 1       | 10,893,427 | ± 181,686    |
-| `baseline_increment_1t`       | 1       | 7,311,142  | ± 434,885    |
-| `multiRead_optimistic_4t`     | 4       | 28,759,901 | ± 12,543,127 |
-| `multiRead_optimistic_8t`     | 8       | 38,720,213 | ± 6,727,568  |
-| `bankTransfer_optimistic_4t`  | 4       | 4,899,352  | ± 1,137,914  |
-| `bankTransfer_optimistic_8t`  | 8       | 5,671,968  | ± 511,144    |
-| `bankTransfer_pessimistic_4t` | 4       | 6,106,656  | ± 839,891    |
-| `bankTransfer_pessimistic_8t` | 8       | 7,401,965  | ± 397,720    |
-| `mixed_readHeavy_4t`          | 4       | 3,228,018  | ± 202,870    |
-| `mixed_readHeavy_8t`          | 8       | 3,162,629  | ± 171,668    |
+| Workload                     | Operation                                         |
+| ---------------------------- | ------------------------------------------------- |
+| `baseline_read_1t`           | Read one TVar                                     |
+| `baseline_increment_1t`      | Read and increment one TVar                       |
+| `multiRead_optimistic_*`     | Sum two adjacent accounts                         |
+| `bankTransfer_optimistic_*`  | Transfer one unit between distinct accounts       |
+| `bankTransfer_pessimistic_*` | The same transfer with eager write locks          |
+| `mixed_readHeavy_*`          | Read eight accounts and increment a separate sink |
 
-**`multiRead`** scales past 8 threads because reads are non-contending MVCC snapshots —
-each thread scans its own `readPoint` without acquiring any lock.
+Multi-account workloads use 64 accounts initialized to 100,000 each. A benchmark operation
+is one completed workload invocation, including any transaction retries; throughput is
+reported in operations per second.
 
-**`bankTransfer` optimistic** throughput drops at 8t due to write conflicts and retry
-overhead. **`bankTransfer` pessimistic** holds steady by acquiring locks eagerly and
-avoiding wasted optimistic work; the adaptive strategy selector routes write-heavy
-workloads here automatically.
+### Results
+
+Measured on **11 November 2026** with Temurin **25.0.5+8**, JMH **1.37**, and an AMD Ryzen 5
+7535HS (6 cores / 12 hardware threads), running Linux. Each result combines 10 measurement
+samples across 2 JVM forks; the error column is JMH's 99.9% confidence-interval half-width.
+Higher throughput is better.
+
+| Benchmark                     | Threads | Throughput (ops/s) | Error (± ops/s) |
+| ----------------------------- | ------: | -----------------: | --------------: |
+| `baseline_read_1t`            |       1 |         15,732,671 |         430,345 |
+| `baseline_increment_1t`       |       1 |          8,845,450 |         457,260 |
+| `multiRead_optimistic_4t`     |       4 |         33,559,644 |      16,249,917 |
+| `multiRead_optimistic_8t`     |       8 |         40,130,495 |       6,381,437 |
+| `bankTransfer_optimistic_4t`  |       4 |          6,375,303 |         320,001 |
+| `bankTransfer_optimistic_8t`  |       8 |          6,113,329 |         642,031 |
+| `bankTransfer_pessimistic_4t` |       4 |          4,693,942 |          73,061 |
+| `bankTransfer_pessimistic_8t` |       8 |          4,773,526 |         112,787 |
+| `mixed_readHeavy_4t`          |       4 |          2,936,544 |         121,561 |
+| `mixed_readHeavy_8t`          |       8 |          2,838,435 |         158,014 |
+
+[Raw JMH results](docs/benchmarks/2026-11-11-jdk25.json) ·
+[Environment and reproduction details](docs/benchmarks/README.md)
+
+These measurements describe this local run. Account selection, contention, JVM behavior, and
+machine load affect throughput; compare protocols using your application's workload.
