@@ -33,12 +33,24 @@ public class TransactionFixture {
     }
 
     public static void unrelatedLambda(TVar<Integer> variable, Runnable body) {
-        Runnable unused = () -> Weft.write(variable, 1);
+        Runnable _ = () -> Weft.write(variable, 1);
         Weft.atomic(body);
     }
 
-    public static void explicitMetrics(TVar<Integer> variable) {
+    public static void explicitHints(TVar<Integer> variable) {
         Weft.atomic(() -> Weft.write(variable, 3), new TransactionHints(1, 9));
+    }
+
+    public static void conditionalLambda(TVar<Integer> variable, boolean readOnly) {
+        Weft.atomic(readOnly ? () -> Weft.read(variable) : () -> Weft.write(variable, 4));
+    }
+
+    public static void writeHeavy(TVar<Integer> variable, Runnable check) {
+        Weft.atomic(() -> {
+            Weft.write(variable, 1);
+            Weft.write(variable, 2);
+            check.run();
+        });
     }
 
     public static class ExternalBody {

@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
 public final class WeftAgent {
 
     private static final System.Logger LOG = System.getLogger(WeftAgent.class.getName());
-    private static final String AGENT_INTERNAL_PREFIX = "tech/provokedynamic/weft/agent/";
+    private static final String AGENT_PREFIX = "tech/provokedynamic/weft/agent/";
+    private static final String SHADED_PREFIX = "tech/provokedynamic/weft/shaded/";
 
     private WeftAgent() {
     }
@@ -24,7 +25,7 @@ public final class WeftAgent {
      * @throws IllegalArgumentException if the scan scope is empty
      */
     public static void premain(String agentArguments, Instrumentation instrumentation) {
-        registerTransformer(parseInstrumentationPrefixes(agentArguments), instrumentation);
+        registerTransformer(parsePrefixes(agentArguments), instrumentation);
     }
 
     /**
@@ -35,24 +36,25 @@ public final class WeftAgent {
      * @throws IllegalArgumentException if the scan scope is empty
      */
     public static void agentmain(String agentArguments, Instrumentation instrumentation) {
-        registerTransformer(parseInstrumentationPrefixes(agentArguments), instrumentation);
+        registerTransformer(parsePrefixes(agentArguments), instrumentation);
     }
 
     /**
      * Installs the agent programmatically using Byte Buddy's instrumentation attachment.
      * Attachment requires support and permission from the running JVM.
+     * Use {@code -XX:+EnableDynamicAgentLoading} to opt into dynamic loading on recent JDKs.
      *
      * @param agentArguments comma-separated binary-name prefixes
      * @throws IllegalArgumentException if the scan scope is empty
      * @throws IllegalStateException if instrumentation cannot be obtained
      */
     public static void attach(String agentArguments) {
-        var prefixes = parseInstrumentationPrefixes(agentArguments);
+        var prefixes = parsePrefixes(agentArguments);
         registerTransformer(prefixes, ByteBuddyAgent.install());
     }
 
     /** Normalizes, deduplicates, and validates prefixes before transformer registration. */
-    static Set<String> parseInstrumentationPrefixes(String agentArguments) {
+    static Set<String> parsePrefixes(String agentArguments) {
         if (agentArguments == null || agentArguments.isBlank()) {
             throw new IllegalArgumentException("Weft agent requires at least one scan prefix, e.g. -javaagent:weft-agent.jar=com/example/myapp/");
         }
@@ -67,8 +69,10 @@ public final class WeftAgent {
         return prefixes;
     }
 
-    static boolean isOutsideInstrumentationScope(String internalName, Set<String> prefixes) {
-        return prefixes.stream().noneMatch(internalName::startsWith);
+    static boolean isInScope(String internalName, Set<String> prefixes) {
+        return !internalName.startsWith(AGENT_PREFIX)
+                && !internalName.startsWith(SHADED_PREFIX)
+                && prefixes.stream().anyMatch(internalName::startsWith);
     }
 
     private static void registerTransformer(Set<String> prefixes, Instrumentation instrumentation) {
@@ -77,12 +81,12 @@ public final class WeftAgent {
         if (canRetransform) retransformLoadedClasses(instrumentation, prefixes);
     }
 
+    /** Retransforms a batch, falling back to individual classes after a recoverable failure. */
     private static void retransformLoadedClasses(Instrumentation instrumentation, Set<String> prefixes) {
         var targets = Arrays.stream(instrumentation.getAllLoadedClasses())
                 .filter(loadedClass -> {
                     var name = loadedClass.getName().replace('.', '/');
-                    return !name.startsWith(AGENT_INTERNAL_PREFIX)
-                            && !isOutsideInstrumentationScope(name, prefixes)
+                    return isInScope(name, prefixes)
                             && instrumentation.isModifiableClass(loadedClass);
                 })
                 .toArray(Class<?>[]::new);
@@ -91,8 +95,15 @@ public final class WeftAgent {
         }
         try {
             instrumentation.retransformClasses(targets);
-        } catch (Exception e) {
-            LOG.log(System.Logger.Level.WARNING, "Could not retransform loaded Weft application classes", e);
+        } catch (Exception | LinkageError failure) {
+            LOG.log(System.Logger.Level.WARNING, "Could not retransform the application class batch; retrying individually", failure);
+            for (Class<?> target : targets) {
+                try {
+                    instrumentation.retransformClasses(target);
+                } catch (Exception | LinkageError skipped) {
+                    LOG.log(System.Logger.Level.WARNING, "Could not retransform " + target.getName(), skipped);
+                }
+            }
         }
     }
 }
