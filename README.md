@@ -1,8 +1,8 @@
-# IASTM
+# Weft
 
 **Instrumented Adaptive Software Transactional Memory**
 
-IASTM is a transactional memory library for **Java 25**. Transactions buffer changes to
+Weft is a transactional memory library for **Java 25**. Transactions buffer changes to
 shared `TVar<T>` values and commit them together after validation. Conflicting attempts
 are retried automatically.
 
@@ -29,21 +29,21 @@ call sites so the runtime can choose between optimistic and pessimistic write lo
 
 ## Quick start
 
-Wrap related reads and writes in `IASTM.start`. For example, transfer a balance between
+Wrap related reads and writes in `Weft.atomic`. For example, transfer a balance between
 two accounts in one transaction:
 
 ```java
-import tech.provokedynamic.iastm.atomic.IASTM;
-import tech.provokedynamic.iastm.atomic.TVar;
+import tech.provokedynamic.weft.atomic.Weft;
+import tech.provokedynamic.weft.atomic.TVar;
 
 TVar<Integer> source = new TVar<>(100);
 TVar<Integer> destination = new TVar<>(0);
 
-IASTM.start(() -> {
-    int balance = IASTM.read(source);
+Weft.atomic(() -> {
+    int balance = Weft.read(source);
     if (balance >= 10) {
-        IASTM.write(source, balance - 10);
-        IASTM.write(destination, IASTM.read(destination) + 10);
+        Weft.write(source, balance - 10);
+        Weft.write(destination, Weft.read(destination) + 10);
     }
 });
 ```
@@ -52,8 +52,8 @@ Reads within the transaction see its buffered writes, including `null` values. O
 transactions can observe the new values after a successful commit.
 
 Bodies may execute more than once. Keep I/O and irreversible side effects outside them,
-and publish computed results after `start` returns. Store immutable values or replace
-objects through `IASTM.write`; mutating a returned object directly bypasses buffering.
+and publish computed results after `atomic` returns. Store immutable values or replace
+objects through `Weft.write`; mutating a returned object directly bypasses buffering.
 
 ## Build and test
 
@@ -68,9 +68,9 @@ This runs the core and agent tests and packages all three modules:
 
 | Module            | Artifact                                          | Purpose                           |
 | ----------------- | ------------------------------------------------- | --------------------------------- |
-| `iastm-core`      | `iastm-core/target/iastm-core-1.0-SNAPSHOT.jar`   | Transaction API and runtime       |
-| `iastm-agent`     | `iastm-agent/target/iastm-agent-1.0-SNAPSHOT.jar` | Optional bytecode instrumentation |
-| `iastm-benchmark` | `iastm-benchmark/target/benchmarks.jar`           | Runnable JMH suite                |
+| `weft-core`      | `weft-core/target/weft-core-1.0-SNAPSHOT.jar`   | Transaction API and runtime       |
+| `weft-agent`     | `weft-agent/target/weft-agent-1.0-SNAPSHOT.jar` | Optional bytecode instrumentation |
+| `weft-benchmark` | `weft-benchmark/target/benchmarks.jar`           | Runnable JMH suite                |
 
 Generate the aggregated API documentation with strict Javadoc checks:
 
@@ -86,12 +86,12 @@ Logback is a core test dependency. Dependency and plugin versions are centralize
 
 ```mermaid
 flowchart TB
-    app["Application<br/>start · read · write"]
-    agent["Optional Java agent<br/>Static TxMetrics"]
+    app["Application<br/>atomic · read · write"]
+    agent["Optional Java agent<br/>Static TransactionHints"]
 
-    subgraph core["iastm-core · transaction runtime"]
-        api["IASTM<br/>Scope · nesting · retry"]
-        tx["Tx · unit of work<br/>Read/write sets · locks"]
+    subgraph core["weft-core · transaction runtime"]
+        api["Weft<br/>Scope · nesting · retry"]
+        tx["Transaction · unit of work<br/>Read/write sets · locks"]
         optimistic["Optimistic<br/>Lock at commit"]
         pessimistic["Pessimistic write<br/>Lock on write"]
         variable["TVar&lt;T&gt;<br/>Value · version · lock"]
@@ -125,21 +125,21 @@ The benchmark module depends on the core and uses explicit hints for its forced 
 
 | Component                                                                                                          | Responsibility                                                |
 | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| [`IASTM`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/IASTM.java)                                    | Public API, transaction scope, nesting, and retries           |
-| [`Tx`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/Tx.java)                                          | Read versions, pending writes, validation, and lock ownership |
-| [`ConcurrencyProtocol`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/ConcurrencyProtocol.java)        | Read access and write-lock timing                             |
-| [`TVar<T>`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/TVar.java)                                   | Committed value, version, history, and write lock             |
-| [`VersionHistory<T>`](iastm-core/src/main/java/tech/provokedynamic/iastm/mvcc/VersionHistory.java)                 | Version storage and explicit capacity changes                 |
-| [`CircularVersionHistory<T>`](iastm-core/src/main/java/tech/provokedynamic/iastm/mvcc/CircularVersionHistory.java) | Bounded circular history with binary-search lookup            |
-| [`Clock`](iastm-core/src/main/java/tech/provokedynamic/iastm/atomic/Clock.java)                                    | Separate counters for commit versions and variable identities |
-| [`AdaptiveBackoff`](iastm-core/src/main/java/tech/provokedynamic/iastm/retry/AdaptiveBackoff.java)                 | Retry delays with exponential parking and jitter              |
+| [`Weft`](weft-core/src/main/java/tech/provokedynamic/weft/atomic/Weft.java)                                    | Public API, transaction scope, nesting, and retries           |
+| [`Transaction`](weft-core/src/main/java/tech/provokedynamic/weft/atomic/Transaction.java)                                          | Read versions, pending writes, validation, and lock ownership |
+| [`ConcurrencyProtocol`](weft-core/src/main/java/tech/provokedynamic/weft/atomic/ConcurrencyProtocol.java)        | Read access and write-lock timing                             |
+| [`TVar<T>`](weft-core/src/main/java/tech/provokedynamic/weft/atomic/TVar.java)                                   | Committed value, version, history, and write lock             |
+| [`VersionHistory<T>`](weft-core/src/main/java/tech/provokedynamic/weft/mvcc/VersionHistory.java)                 | Version storage and explicit capacity changes                 |
+| [`CircularVersionHistory<T>`](weft-core/src/main/java/tech/provokedynamic/weft/mvcc/CircularVersionHistory.java) | Bounded circular history with binary-search lookup            |
+| [`Clock`](weft-core/src/main/java/tech/provokedynamic/weft/atomic/Clock.java)                                    | Separate counters for commit versions and variable identities |
+| [`AdaptiveBackoff`](weft-core/src/main/java/tech/provokedynamic/weft/retry/AdaptiveBackoff.java)                 | Retry delays with exponential parking and jitter              |
 
 ## Transaction behavior
 
-Each outermost `start` chooses a protocol and creates a retry state. Each attempt then:
+Each outermost `atomic` chooses a protocol and creates a retry state. Each attempt then:
 
-1. Creates a fresh `Tx` at the current commit-clock snapshot.
-2. Binds it through `ScopedValue<Tx>` while the body records reads and buffers writes.
+1. Creates a fresh `Transaction` at the current commit-clock snapshot.
+2. Binds it through `ScopedValue<Transaction>` while the body records reads and buffers writes.
 3. Acquires write locks according to the selected protocol and validates every read.
 4. Publishes buffered writes with one commit stamp, or retries if a conflict occurred.
 5. Releases all owned locks before returning, propagating an exception, or backing off.
@@ -149,7 +149,7 @@ Application exceptions and errors discard buffered writes when they escape the o
 
 ### Nested transactions
 
-Nested `start` calls join the current attempt. They see the outer transaction's pending
+Nested `atomic` calls join the current attempt. They see the outer transaction's pending
 writes, inherit its protocol, and commit or retry with it. If an exception escapes the
 outer body, the nested writes are discarded too.
 
@@ -181,8 +181,8 @@ other locks.
 
 ### Selecting a protocol
 
-Without metrics, `IASTM.start(body)` uses the optimistic protocol. Supply hints explicitly
-with `IASTM.start(body, new TxMetrics(readOps, writeOps))`, or let the agent inject them.
+Without metrics, `Weft.atomic(body)` uses the optimistic protocol. Supply hints explicitly
+with `Weft.atomic(body, new TransactionHints(readOps, writeOps))`, or let the agent inject them.
 
 | Hint                              | Selected protocol |
 | --------------------------------- | ----------------- |
@@ -192,7 +192,7 @@ with `IASTM.start(body, new TxMetrics(readOps, writeOps))`, or let the agent inj
 | Otherwise                         | Optimistic        |
 
 Selection happens once per outermost invocation. Counts must be non-negative; the
-two-argument `TxMetrics` constructor derives the total with overflow checking. The
+two-argument `TransactionHints` constructor derives the total with overflow checking. The
 three-argument constructor preserves an explicitly supplied normalization total.
 
 ## Version history
@@ -216,13 +216,13 @@ The agent uses the JDK **Class-File API** to analyze and rewrite transaction cal
 Byte Buddy provides the instrumentation handle for programmatic attachment.
 
 For a directly supplied lambda with one read and one write, the agent replaces
-`IASTM.start(body)` with the equivalent of:
+`Weft.atomic(body)` with the equivalent of:
 
 ```java
-IASTM.start(() -> {
-    int value = IASTM.read(counter);
-    IASTM.write(counter, value + 1);
-}, new TxMetrics(1, 1));
+Weft.atomic(() -> {
+    int value = Weft.read(counter);
+    Weft.write(counter, value + 1);
+}, new TransactionHints(1, 1));
 ```
 
 It resolves directly nested transaction bodies and method references implemented in the
@@ -237,8 +237,8 @@ explicit metrics when those transaction bodies need hints.
 ### Enable at startup
 
 ```bash
-java -javaagent:iastm-agent/target/iastm-agent-1.0-SNAPSHOT.jar=com/example/ \
-     -cp 'your-app.jar:iastm-core/target/iastm-core-1.0-SNAPSHOT.jar:lib/*' com.example.Main
+java -javaagent:weft-agent/target/weft-agent-1.0-SNAPSHOT.jar=com/example/ \
+     -cp 'your-app.jar:weft-core/target/weft-core-1.0-SNAPSHOT.jar:lib/*' com.example.Main
 ```
 
 Here `lib/` contains the application's runtime dependencies, including `slf4j-api`.
@@ -253,7 +253,7 @@ scan scopes are rejected, and the agent always excludes its own implementation p
 | Mode         | Entry point                         |
 | ------------ | ----------------------------------- |
 | Attach API   | `agentmain` on a running JVM        |
-| Programmatic | `IASTMAgent.attach("com/example/")` |
+| Programmatic | `WeftAgent.attach("com/example/")` |
 
 Attachment depends on JVM support and permissions. Matching modifiable loaded classes are
 retransformed in a batch when supported; otherwise instrumentation applies to future loads.
@@ -279,14 +279,14 @@ Parked delays add 0–5 ms of jitter. The same backoff state is retained across 
 
 ## Design patterns
 
-| Pattern                                                                                                                         | Role in IASTM                                                                      |
+| Pattern                                                                                                                         | Role in Weft                                                                      |
 | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | **Strategy** / [Replace Conditional with Polymorphism](https://refactoring.com/catalog/replaceConditionalWithPolymorphism.html) | `ConcurrencyProtocol.Optimistic` and `PessimisticWrite` vary reads and lock timing |
-| [Unit of Work](https://martinfowler.com/eaaCatalog/unitOfWork.html), adapted to memory                                          | `Tx` tracks observations and buffered changes, then coordinates commit             |
-| [Encapsulate Collection](https://refactoring.com/catalog/encapsulateCollection.html)                                            | Read versions, pending writes, and owned locks stay private to `Tx`                |
+| [Unit of Work](https://martinfowler.com/eaaCatalog/unitOfWork.html), adapted to memory                                          | `Transaction` tracks observations and buffered changes, then coordinates commit             |
+| [Encapsulate Collection](https://refactoring.com/catalog/encapsulateCollection.html)                                            | Read versions, pending writes, and owned locks stay private to `Transaction`                |
 | **Scoped resource management**                                                                                                  | `AutoCloseable` releases locks on every exit path before retrying                  |
 
-Protocols are stateless enum singletons. Mutable attempt state belongs to `Tx`; retry state
+Protocols are stateless enum singletons. Mutable attempt state belongs to `Transaction`; retry state
 belongs to the outer invocation. Independent attempts retain object identity, even when
 they share a snapshot timestamp.
 
@@ -300,7 +300,7 @@ they share a snapshot timestamp.
 | `Protocol`        | `ConcurrencyProtocol`    |
 
 Protocol implementations are `ConcurrencyProtocol.Optimistic` and
-`ConcurrencyProtocol.PessimisticWrite`. The application API remains `IASTM` and `TVar`.
+`ConcurrencyProtocol.PessimisticWrite`. The application API remains `Weft` and `TVar`.
 
 </details>
 
@@ -309,20 +309,20 @@ Protocol implementations are `ConcurrencyProtocol.Optimistic` and
 List workloads:
 
 ```bash
-java -jar iastm-benchmark/target/benchmarks.jar -l
+java -jar weft-benchmark/target/benchmarks.jar -l
 ```
 
 Run the full suite and save machine-readable results:
 
 ```bash
-java -jar iastm-benchmark/target/benchmarks.jar -foe true \
-     -rf json -rff iastm-benchmark/target/jmh-results.json
+java -jar weft-benchmark/target/benchmarks.jar -foe true \
+     -rf json -rff weft-benchmark/target/jmh-results.json
 ```
 
 To select only transfer workloads, append the filter `bankTransfer` before the options.
 Defaults are **3 × 1 s warmup iterations**, **5 × 2 s measurement iterations**, and
 **2 forks** per workload. Shared state is reset per iteration. The agent is not enabled;
-pessimistic workloads use explicit `TxMetrics(1, 9)` hints.
+pessimistic workloads use explicit `TransactionHints(1, 9)` hints.
 
 | Workload                     | Operation                                         |
 | ---------------------------- | ------------------------------------------------- |

@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>tech.provokedynamic</groupId>
-    <artifactId>iastm</artifactId>
+    <artifactId>weft</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>IASTM — Instrumented Adaptive Software Transactional Memory</name>
-    <url>https://github.com/gchape/iastm</url>
+    <name>Weft — Instrumented Adaptive Software Transactional Memory</name>
+    <url>https://github.com/gchape/weft</url>
     <description>
         A JVM-native STM library with bytecode-level instrumentation (Java agent) that
         automatically injects read/write metrics to drive adaptive optimistic/pessimistic
@@ -18,9 +18,9 @@
     </description>
 
     <modules>
-        <module>iastm-agent</module>
-        <module>iastm-core</module>
-        <module>iastm-benchmark</module>
+        <module>weft-agent</module>
+        <module>weft-core</module>
+        <module>weft-benchmark</module>
     </modules>
 
     <properties>
@@ -51,7 +51,7 @@
         <dependencies>
             <dependency>
                 <groupId>tech.provokedynamic</groupId>
-                <artifactId>iastm-core</artifactId>
+                <artifactId>weft-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
