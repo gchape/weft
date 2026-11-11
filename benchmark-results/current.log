@@ -1,0 +1,1499 @@
+# JMH version: 1.37
+# VM version: JDK 25.0.5, OpenJDK 64-Bit Server VM, 25.0.5+8-LTS
+# VM invoker: /home/giorgichapidze/.sdkman/candidates/java/25.0.5.0+8-tem/bin/java
+# VM options: <none>
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 2 s each
+# Measurement: 8 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 4 threads (1 group; 3x "read", 1x "write" in each group), will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite
+# Parameters: (access = UNIFORM, accounts = 64, diagnostics = false, engine = OPTIMISTIC, size = 2)
+
+# Run progress: 0.00% complete, ETA 00:07:48
+# Fork: 1 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 15036181.310 ops/s
+# Warmup Iteration   2: 20495053.193 ops/s
+# Warmup Iteration   3: 20003780.868 ops/s
+# Warmup Iteration   4: 19266538.920 ops/s
+# Warmup Iteration   5: 20440883.690 ops/s
+Iteration   1: 20521603.958 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17926416.302 ops/s
+                 write:     2595187.656 ops/s
+
+Iteration   2: 20785068.280 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18185171.117 ops/s
+                 write:     2599897.163 ops/s
+
+Iteration   3: 20294207.422 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17668845.737 ops/s
+                 write:     2625361.686 ops/s
+
+Iteration   4: 20173406.221 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17522328.058 ops/s
+                 write:     2651078.163 ops/s
+
+Iteration   5: 20445200.302 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17854712.840 ops/s
+                 write:     2590487.462 ops/s
+
+Iteration   6: 20046083.883 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17544023.086 ops/s
+                 write:     2502060.797 ops/s
+
+Iteration   7: 19733642.711 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17226598.709 ops/s
+                 write:     2507044.002 ops/s
+
+Iteration   8: 20630191.017 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18149592.216 ops/s
+                 write:     2480598.800 ops/s
+
+
+# Run progress: 5.56% complete, ETA 00:07:27
+# Fork: 2 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 17846575.600 ops/s
+# Warmup Iteration   2: 19475065.316 ops/s
+# Warmup Iteration   3: 21068015.561 ops/s
+# Warmup Iteration   4: 21587524.621 ops/s
+# Warmup Iteration   5: 22396252.489 ops/s
+Iteration   1: 22872470.444 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      20147733.791 ops/s
+                 write:     2724736.653 ops/s
+
+Iteration   2: 23095096.738 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      20363039.882 ops/s
+                 write:     2732056.856 ops/s
+
+Iteration   3: 23172559.767 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      20415662.969 ops/s
+                 write:     2756896.798 ops/s
+
+Iteration   4: 23105517.745 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      20340872.284 ops/s
+                 write:     2764645.461 ops/s
+
+Iteration   5: 22336429.783 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19750983.779 ops/s
+                 write:     2585446.004 ops/s
+
+Iteration   6: 22962425.395 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      20191859.062 ops/s
+                 write:     2770566.333 ops/s
+
+Iteration   7: 21097768.018 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18424285.467 ops/s
+                 write:     2673482.551 ops/s
+
+Iteration   8: 23174312.801 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      20407054.235 ops/s
+                 write:     2767258.566 ops/s
+
+
+# Run progress: 11.11% complete, ETA 00:07:00
+# Fork: 3 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 19474226.171 ops/s
+# Warmup Iteration   2: 20766473.145 ops/s
+# Warmup Iteration   3: 20647901.342 ops/s
+# Warmup Iteration   4: 20224128.181 ops/s
+# Warmup Iteration   5: 21397181.942 ops/s
+Iteration   1: 21040361.662 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18305918.660 ops/s
+                 write:     2734443.002 ops/s
+
+Iteration   2: 20802682.052 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18065463.977 ops/s
+                 write:     2737218.075 ops/s
+
+Iteration   3: 20573999.009 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17709215.790 ops/s
+                 write:     2864783.219 ops/s
+
+Iteration   4: 19338088.920 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      16572119.871 ops/s
+                 write:     2765969.049 ops/s
+
+Iteration   5: 21167904.418 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18272767.437 ops/s
+                 write:     2895136.981 ops/s
+
+Iteration   6: 21233251.890 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18383621.684 ops/s
+                 write:     2849630.206 ops/s
+
+Iteration   7: 20391019.234 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17645456.366 ops/s
+                 write:     2745562.868 ops/s
+
+Iteration   8: 20278426.072 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      17430423.607 ops/s
+                 write:     2848002.464 ops/s
+
+
+
+Result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite":
+  21219654.906 ±(99.9%) 943787.837 ops/s [Average]
+  (min, avg, max) = (19338088.920, 21219654.906, 23174312.801), stdev = 1227190.879
+  CI (99.9%): [20275867.069, 22163442.742] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:attempts":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:completed":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:exhausted":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:noOps":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:read":
+  18521006.955 ±(99.9%) 920661.651 ops/s [Average]
+  (min, avg, max) = (16572119.871, 18521006.955, 20415662.969), stdev = 1197120.302
+  CI (99.9%): [17600345.305, 19441668.606] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:write":
+  2698647.951 ±(99.9%) 90199.034 ops/s [Average]
+  (min, avg, max) = (2480598.800, 2698647.951, 2895136.981), stdev = 117284.233
+  CI (99.9%): [2608448.916, 2788846.985] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.5, OpenJDK 64-Bit Server VM, 25.0.5+8-LTS
+# VM invoker: /home/giorgichapidze/.sdkman/candidates/java/25.0.5.0+8-tem/bin/java
+# VM options: <none>
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 2 s each
+# Measurement: 8 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 4 threads (1 group; 3x "read", 1x "write" in each group), will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite
+# Parameters: (access = UNIFORM, accounts = 64, diagnostics = false, engine = PESSIMISTIC, size = 2)
+
+# Run progress: 16.67% complete, ETA 00:06:33
+# Fork: 1 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 15044573.409 ops/s
+# Warmup Iteration   2: 18927849.690 ops/s
+# Warmup Iteration   3: 18487856.877 ops/s
+# Warmup Iteration   4: 17904404.421 ops/s
+# Warmup Iteration   5: 18375124.362 ops/s
+Iteration   1: 18384087.477 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      15808380.688 ops/s
+                 write:     2575706.790 ops/s
+
+Iteration   2: 18998863.341 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      16455681.540 ops/s
+                 write:     2543181.801 ops/s
+
+Iteration   3: 18724600.541 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      16207207.561 ops/s
+                 write:     2517392.980 ops/s
+
+Iteration   4: 18707951.813 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      16189998.355 ops/s
+                 write:     2517953.458 ops/s
+
+Iteration   5: 18622949.205 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      16061039.298 ops/s
+                 write:     2561909.907 ops/s
+
+Iteration   6: 17978269.182 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      15444599.166 ops/s
+                 write:     2533670.016 ops/s
+
+Iteration   7: 19017467.525 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      16451420.680 ops/s
+                 write:     2566046.845 ops/s
+
+Iteration   8: 18175440.916 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      15636051.878 ops/s
+                 write:     2539389.038 ops/s
+
+
+# Run progress: 22.22% complete, ETA 00:06:07
+# Fork: 2 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 19779657.722 ops/s
+# Warmup Iteration   2: 21905534.717 ops/s
+# Warmup Iteration   3: 22045588.846 ops/s
+# Warmup Iteration   4: 21628044.558 ops/s
+# Warmup Iteration   5: 22463505.446 ops/s
+Iteration   1: 21992387.263 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19339990.349 ops/s
+                 write:     2652396.915 ops/s
+
+Iteration   2: 22067647.890 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19389615.573 ops/s
+                 write:     2678032.317 ops/s
+
+Iteration   3: 21950758.003 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19267591.948 ops/s
+                 write:     2683166.056 ops/s
+
+Iteration   4: 22392203.442 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19682455.856 ops/s
+                 write:     2709747.586 ops/s
+
+Iteration   5: 22338138.584 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19617278.294 ops/s
+                 write:     2720860.290 ops/s
+
+Iteration   6: 22402276.939 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19686894.403 ops/s
+                 write:     2715382.536 ops/s
+
+Iteration   7: 21399436.272 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      18742959.213 ops/s
+                 write:     2656477.059 ops/s
+
+Iteration   8: 22229448.430 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      19586296.578 ops/s
+                 write:     2643151.852 ops/s
+
+
+# Run progress: 27.78% complete, ETA 00:05:41
+# Fork: 3 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 15692623.275 ops/s
+# Warmup Iteration   2: 18285505.915 ops/s
+# Warmup Iteration   3: 18354432.255 ops/s
+# Warmup Iteration   4: 18313215.477 ops/s
+# Warmup Iteration   5: 18226966.868 ops/s
+Iteration   1: 18529543.975 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      15389234.269 ops/s
+                 write:     3140309.707 ops/s
+
+Iteration   2: 17869447.085 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      14783184.318 ops/s
+                 write:     3086262.766 ops/s
+
+Iteration   3: 17724458.132 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      14678871.419 ops/s
+                 write:     3045586.713 ops/s
+
+Iteration   4: 18158783.602 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      15015712.108 ops/s
+                 write:     3143071.493 ops/s
+
+Iteration   5: 18041131.678 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      14987560.400 ops/s
+                 write:     3053571.278 ops/s
+
+Iteration   6: 18436517.675 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      15289823.956 ops/s
+                 write:     3146693.719 ops/s
+
+Iteration   7: 16815612.065 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      13917473.142 ops/s
+                 write:     2898138.923 ops/s
+
+Iteration   8: 17669411.320 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      14643200.306 ops/s
+                 write:     3026211.013 ops/s
+
+
+
+Result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite":
+  19526118.015 ±(99.9%) 1477243.090 ops/s [Average]
+  (min, avg, max) = (16815612.065, 19526118.015, 22402276.939), stdev = 1920833.450
+  CI (99.9%): [18048874.925, 21003361.105] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:attempts":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:completed":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:exhausted":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:noOps":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:read":
+  16761355.054 ±(99.9%) 1548798.150 ops/s [Average]
+  (min, avg, max) = (13917473.142, 16761355.054, 19686894.403), stdev = 2013875.248
+  CI (99.9%): [15212556.904, 18310153.204] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:write":
+  2764762.961 ±(99.9%) 178159.279 ops/s [Average]
+  (min, avg, max) = (2517392.980, 2764762.961, 3146693.719), stdev = 231657.406
+  CI (99.9%): [2586603.682, 2942922.239] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.5, OpenJDK 64-Bit Server VM, 25.0.5+8-LTS
+# VM invoker: /home/giorgichapidze/.sdkman/candidates/java/25.0.5.0+8-tem/bin/java
+# VM options: <none>
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 2 s each
+# Measurement: 8 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 4 threads (1 group; 3x "read", 1x "write" in each group), will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite
+# Parameters: (access = UNIFORM, accounts = 64, diagnostics = false, engine = LOCKED, size = 2)
+
+# Run progress: 33.33% complete, ETA 00:05:15
+# Fork: 1 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 53320620.508 ops/s
+# Warmup Iteration   2: 54268276.571 ops/s
+# Warmup Iteration   3: 59534443.891 ops/s
+# Warmup Iteration   4: 61142258.128 ops/s
+# Warmup Iteration   5: 61245898.506 ops/s
+Iteration   1: 60736417.425 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      45791371.868 ops/s
+                 write:     14945045.557 ops/s
+
+Iteration   2: 60941241.429 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      46517891.146 ops/s
+                 write:     14423350.282 ops/s
+
+Iteration   3: 61188960.332 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      46699350.941 ops/s
+                 write:     14489609.391 ops/s
+
+Iteration   4: 62444199.172 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      47867164.107 ops/s
+                 write:     14577035.065 ops/s
+
+Iteration   5: 61119494.284 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      46306112.525 ops/s
+                 write:     14813381.759 ops/s
+
+Iteration   6: 61713820.394 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      47283532.227 ops/s
+                 write:     14430288.167 ops/s
+
+Iteration   7: 60186555.919 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      45689826.681 ops/s
+                 write:     14496729.237 ops/s
+
+Iteration   8: 61542052.726 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      46953430.043 ops/s
+                 write:     14588622.683 ops/s
+
+
+# Run progress: 38.89% complete, ETA 00:04:48
+# Fork: 2 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 55229988.972 ops/s
+# Warmup Iteration   2: 54356828.983 ops/s
+# Warmup Iteration   3: 56063246.448 ops/s
+# Warmup Iteration   4: 57209079.068 ops/s
+# Warmup Iteration   5: 58702446.242 ops/s
+Iteration   1: 58705230.831 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      45765943.084 ops/s
+                 write:     12939287.747 ops/s
+
+Iteration   2: 58266234.127 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      45224019.019 ops/s
+                 write:     13042215.109 ops/s
+
+Iteration   3: 58413181.653 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      45732683.068 ops/s
+                 write:     12680498.584 ops/s
+
+Iteration   4: 61040384.276 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      49160969.753 ops/s
+                 write:     11879414.523 ops/s
+
+Iteration   5: 61422829.113 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      48904660.649 ops/s
+                 write:     12518168.463 ops/s
+
+Iteration   6: 62086315.270 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      49361071.719 ops/s
+                 write:     12725243.551 ops/s
+
+Iteration   7: 61306898.013 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      48828365.632 ops/s
+                 write:     12478532.381 ops/s
+
+Iteration   8: 61572958.466 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      49744557.440 ops/s
+                 write:     11828401.025 ops/s
+
+
+# Run progress: 44.44% complete, ETA 00:04:22
+# Fork: 3 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 61669105.660 ops/s
+# Warmup Iteration   2: 61126108.268 ops/s
+# Warmup Iteration   3: 54431211.456 ops/s
+# Warmup Iteration   4: 58285775.053 ops/s
+# Warmup Iteration   5: 58808041.190 ops/s
+Iteration   1: 58621630.650 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      45605559.595 ops/s
+                 write:     13016071.054 ops/s
+
+Iteration   2: 58326029.771 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      45673425.228 ops/s
+                 write:     12652604.543 ops/s
+
+Iteration   3: 58897216.335 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      46043789.358 ops/s
+                 write:     12853426.977 ops/s
+
+Iteration   4: 59905354.867 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      47369441.922 ops/s
+                 write:     12535912.945 ops/s
+
+Iteration   5: 59443959.927 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      47099281.633 ops/s
+                 write:     12344678.294 ops/s
+
+Iteration   6: 59566845.933 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      47595521.187 ops/s
+                 write:     11971324.746 ops/s
+
+Iteration   7: 60291338.301 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      47335704.166 ops/s
+                 write:     12955634.135 ops/s
+
+Iteration   8: 60516430.064 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+                 read:      47854351.178 ops/s
+                 write:     12662078.886 ops/s
+
+
+
+Result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite":
+  60343982.470 ±(99.9%) 991090.127 ops/s [Average]
+  (min, avg, max) = (58266234.127, 60343982.470, 62444199.172), stdev = 1288697.223
+  CI (99.9%): [59352892.343, 61335072.597] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:attempts":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:completed":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:exhausted":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:noOps":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:read":
+  47100334.340 ±(99.9%) 1033893.051 ops/s [Average]
+  (min, avg, max) = (45224019.019, 47100334.340, 49744557.440), stdev = 1344353.119
+  CI (99.9%): [46066441.290, 48134227.391] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.ReaderWriterBenchmark.readWrite:write":
+  13243648.129 ±(99.9%) 793185.390 ops/s [Average]
+  (min, avg, max) = (11828401.025, 13243648.129, 14945045.557), stdev = 1031365.142
+  CI (99.9%): [12450462.740, 14036833.519] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.5, OpenJDK 64-Bit Server VM, 25.0.5+8-LTS
+# VM invoker: /home/giorgichapidze/.sdkman/candidates/java/25.0.5.0+8-tem/bin/java
+# VM options: <none>
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 2 s each
+# Measurement: 8 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 4 threads, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer
+# Parameters: (access = UNIFORM, accounts = 64, diagnostics = false, engine = OPTIMISTIC, size = 2)
+
+# Run progress: 50.00% complete, ETA 00:03:56
+# Fork: 1 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 7540007.022 ops/s
+# Warmup Iteration   2: 8707622.341 ops/s
+# Warmup Iteration   3: 8837802.242 ops/s
+# Warmup Iteration   4: 9063836.987 ops/s
+# Warmup Iteration   5: 9031397.388 ops/s
+Iteration   1: 9083586.097 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 9093198.741 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 9096755.616 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 9095969.985 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 9161782.028 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 9354771.868 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 9308222.010 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 9273525.108 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+# Run progress: 55.56% complete, ETA 00:03:29
+# Fork: 2 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 8538272.196 ops/s
+# Warmup Iteration   2: 8995622.049 ops/s
+# Warmup Iteration   3: 9028795.587 ops/s
+# Warmup Iteration   4: 9141940.789 ops/s
+# Warmup Iteration   5: 9274877.435 ops/s
+Iteration   1: 9082874.339 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 8783501.160 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 9028596.668 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 9135472.735 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 9101659.502 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 9254260.058 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 9233079.834 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 8523077.152 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+# Run progress: 61.11% complete, ETA 00:03:03
+# Fork: 3 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 7282621.622 ops/s
+# Warmup Iteration   2: 7936245.375 ops/s
+# Warmup Iteration   3: 8315340.647 ops/s
+# Warmup Iteration   4: 8422019.122 ops/s
+# Warmup Iteration   5: 8287893.344 ops/s
+Iteration   1: 8294979.244 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 8261416.226 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 8397023.910 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 8303996.270 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 8337851.011 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 8398431.983 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 8156064.149 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 7983915.495 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+
+Result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer":
+  8822667.133 ±(99.9%) 338911.505 ops/s [Average]
+  (min, avg, max) = (7983915.495, 8822667.133, 9354771.868), stdev = 440680.725
+  CI (99.9%): [8483755.628, 9161578.638] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:attempts":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:completed":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:exhausted":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:noOps":
+  ≈ 0 #
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.5, OpenJDK 64-Bit Server VM, 25.0.5+8-LTS
+# VM invoker: /home/giorgichapidze/.sdkman/candidates/java/25.0.5.0+8-tem/bin/java
+# VM options: <none>
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 2 s each
+# Measurement: 8 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 4 threads, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer
+# Parameters: (access = UNIFORM, accounts = 64, diagnostics = false, engine = PESSIMISTIC, size = 2)
+
+# Run progress: 66.67% complete, ETA 00:02:37
+# Fork: 1 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 7210777.088 ops/s
+# Warmup Iteration   2: 7618480.342 ops/s
+# Warmup Iteration   3: 7600716.197 ops/s
+# Warmup Iteration   4: 7802592.800 ops/s
+# Warmup Iteration   5: 7777220.471 ops/s
+Iteration   1: 7759168.386 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 7769431.833 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 7716567.937 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 7745883.408 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 7636155.782 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 7565094.010 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 7464880.699 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 7023109.458 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+# Run progress: 72.22% complete, ETA 00:02:11
+# Fork: 2 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 6794979.156 ops/s
+# Warmup Iteration   2: 7638816.732 ops/s
+# Warmup Iteration   3: 7205703.210 ops/s
+# Warmup Iteration   4: 7358751.376 ops/s
+# Warmup Iteration   5: 7510073.549 ops/s
+Iteration   1: 7248298.224 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 7617822.641 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 7623637.554 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 7607534.465 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 7435128.601 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 7177237.074 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 7639251.149 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 7657398.726 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+# Run progress: 77.78% complete, ETA 00:01:44
+# Fork: 3 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 6971815.713 ops/s
+# Warmup Iteration   2: 7457290.659 ops/s
+# Warmup Iteration   3: 7386082.749 ops/s
+# Warmup Iteration   4: 7440252.858 ops/s
+# Warmup Iteration   5: 7520746.414 ops/s
+Iteration   1: 7590249.650 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 7488860.208 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 7498596.783 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 7227328.163 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 7332477.087 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 7199417.026 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 7208817.432 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 7202780.306 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+
+Result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer":
+  7476463.608 ±(99.9%) 169411.028 ops/s [Average]
+  (min, avg, max) = (7023109.458, 7476463.608, 7769431.833), stdev = 220282.208
+  CI (99.9%): [7307052.580, 7645874.636] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:attempts":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:completed":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:exhausted":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:noOps":
+  ≈ 0 #
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.5, OpenJDK 64-Bit Server VM, 25.0.5+8-LTS
+# VM invoker: /home/giorgichapidze/.sdkman/candidates/java/25.0.5.0+8-tem/bin/java
+# VM options: <none>
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 2 s each
+# Measurement: 8 iterations, 2 s each
+# Timeout: 10 min per iteration
+# Threads: 4 threads, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer
+# Parameters: (access = UNIFORM, accounts = 64, diagnostics = false, engine = LOCKED, size = 2)
+
+# Run progress: 83.33% complete, ETA 00:01:18
+# Fork: 1 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 47881401.049 ops/s
+# Warmup Iteration   2: 44892217.388 ops/s
+# Warmup Iteration   3: 44769966.518 ops/s
+# Warmup Iteration   4: 44656179.156 ops/s
+# Warmup Iteration   5: 44626902.052 ops/s
+Iteration   1: 45093635.113 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 45519958.876 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 45119391.659 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 43743993.084 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 43019404.595 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 43285588.447 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 44135821.835 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 43533869.131 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+# Run progress: 88.89% complete, ETA 00:00:52
+# Fork: 2 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 46612156.071 ops/s
+# Warmup Iteration   2: 45873689.808 ops/s
+# Warmup Iteration   3: 40260083.173 ops/s
+# Warmup Iteration   4: 43632938.576 ops/s
+# Warmup Iteration   5: 43477654.493 ops/s
+Iteration   1: 43255568.711 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 43804158.315 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 43972218.819 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 43641572.174 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 45153063.749 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 45978827.664 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 46218185.590 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 46488046.581 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+# Run progress: 94.44% complete, ETA 00:00:26
+# Fork: 3 of 3
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/giorgichapidze/VSCodeProjects/weft/weft-benchmark/target/benchmarks.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 43403642.842 ops/s
+# Warmup Iteration   2: 44105237.115 ops/s
+# Warmup Iteration   3: 43715254.290 ops/s
+# Warmup Iteration   4: 44717782.086 ops/s
+# Warmup Iteration   5: 45509007.086 ops/s
+Iteration   1: 45469987.816 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   2: 44810282.341 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   3: 44756008.502 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   4: 44802746.995 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   5: 43579021.034 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   6: 44493589.144 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   7: 44212031.653 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+Iteration   8: 44459554.691 ops/s
+                 attempts:  ≈ 0 #
+                 completed: ≈ 0 #
+                 exhausted: ≈ 0 #
+                 noOps:     ≈ 0 #
+
+
+
+Result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer":
+  44522771.938 ±(99.9%) 748075.728 ops/s [Average]
+  (min, avg, max) = (43019404.595, 44522771.938, 46488046.581), stdev = 972709.835
+  CI (99.9%): [43774696.210, 45270847.666] (assumes normal distribution)
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:attempts":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:completed":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:exhausted":
+  ≈ 0 #
+
+Secondary result "tech.provokedynamic.weft.benchmark.WeftBenchmark.transfer:noOps":
+  ≈ 0 #
+
+
+# Run complete. Total time: 00:07:52
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                                  (access)  (accounts)  (diagnostics)     (engine)  (size)   Mode  Cnt         Score         Error  Units
+ReaderWriterBenchmark.readWrite             UNIFORM          64          false   OPTIMISTIC       2  thrpt   24  21219654.906 ±  943787.837  ops/s
+ReaderWriterBenchmark.readWrite:attempts    UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:completed   UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:exhausted   UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:noOps       UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:read        UNIFORM          64          false   OPTIMISTIC       2  thrpt   24  18521006.955 ±  920661.651  ops/s
+ReaderWriterBenchmark.readWrite:write       UNIFORM          64          false   OPTIMISTIC       2  thrpt   24   2698647.951 ±   90199.034  ops/s
+ReaderWriterBenchmark.readWrite             UNIFORM          64          false  PESSIMISTIC       2  thrpt   24  19526118.015 ± 1477243.090  ops/s
+ReaderWriterBenchmark.readWrite:attempts    UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:completed   UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:exhausted   UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:noOps       UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:read        UNIFORM          64          false  PESSIMISTIC       2  thrpt   24  16761355.054 ± 1548798.150  ops/s
+ReaderWriterBenchmark.readWrite:write       UNIFORM          64          false  PESSIMISTIC       2  thrpt   24   2764762.961 ±  178159.279  ops/s
+ReaderWriterBenchmark.readWrite             UNIFORM          64          false       LOCKED       2  thrpt   24  60343982.470 ±  991090.127  ops/s
+ReaderWriterBenchmark.readWrite:attempts    UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:completed   UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:exhausted   UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:noOps       UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+ReaderWriterBenchmark.readWrite:read        UNIFORM          64          false       LOCKED       2  thrpt   24  47100334.340 ± 1033893.051  ops/s
+ReaderWriterBenchmark.readWrite:write       UNIFORM          64          false       LOCKED       2  thrpt   24  13243648.129 ±  793185.390  ops/s
+WeftBenchmark.transfer                      UNIFORM          64          false   OPTIMISTIC       2  thrpt   24   8822667.133 ±  338911.505  ops/s
+WeftBenchmark.transfer:attempts             UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:completed            UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:exhausted            UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:noOps                UNIFORM          64          false   OPTIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer                      UNIFORM          64          false  PESSIMISTIC       2  thrpt   24   7476463.608 ±  169411.028  ops/s
+WeftBenchmark.transfer:attempts             UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:completed            UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:exhausted            UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:noOps                UNIFORM          64          false  PESSIMISTIC       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer                      UNIFORM          64          false       LOCKED       2  thrpt   24  44522771.938 ±  748075.728  ops/s
+WeftBenchmark.transfer:attempts             UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:completed            UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:exhausted            UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+WeftBenchmark.transfer:noOps                UNIFORM          64          false       LOCKED       2  thrpt   24           ≈ 0                    #
+
+Benchmark result is saved to benchmark-results/current.json
