@@ -5,7 +5,10 @@ target/
 *.ear
 
 # Maven
-.mvn/
+.mvn/*
+!.mvn/wrapper/
+.mvn/wrapper/*
+!.mvn/wrapper/maven-wrapper.properties
 dependency-reduced-pom.xml
 
 # IDE

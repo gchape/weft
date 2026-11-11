@@ -9,12 +9,11 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Weft — Instrumented Adaptive Software Transactional Memory</name>
-    <url>https://github.com/gchape/weft</url>
+    <name>Weft — Transactional Memory for Java</name>
     <description>
         A JVM-native STM library with bytecode-level instrumentation (Java agent) that
-        automatically injects read/write metrics to drive adaptive optimistic/pessimistic
-        concurrency strategy selection at runtime.
+        injects static read/write hints to select optimistic or pessimistic
+        write locking for each transaction invocation.
     </description>
 
     <modules>
@@ -35,6 +34,7 @@
 
         <junit.version>6.1.3</junit.version>
         <assertj.version>3.27.7</assertj.version>
+        <jspecify.version>1.0.0</jspecify.version>
 
         <jmh.version>1.37</jmh.version>
 
@@ -60,10 +60,20 @@
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.jspecify</groupId>
+                <artifactId>jspecify</artifactId>
+                <version>${jspecify.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-nop</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
@@ -149,11 +159,19 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>${maven-shade-plugin.version}</version>
+                    <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
