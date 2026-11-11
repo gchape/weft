@@ -35,7 +35,7 @@ enum ConcurrencyProtocol {
                 transaction.invalidate();
                 throw evicted;
             } finally {
-                variable.unlockRead();
+                variable.unlockReadLock();
             }
         }
 
@@ -58,7 +58,7 @@ enum ConcurrencyProtocol {
 
         @Override
         void beforeWrite(TVar<?> variable, Transaction transaction) {
-            transaction.lock(variable);
+            transaction.lockForWrite(variable);
         }
     };
 

@@ -11,8 +11,8 @@ import org.openjdk.jmh.infra.Control;
 import tech.provokedynamic.weft.TransactionHints;
 import tech.provokedynamic.weft.atomic.TVar;
 import tech.provokedynamic.weft.atomic.Weft;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -33,9 +33,9 @@ public class CounterBenchmark extends BenchmarkDefaults {
 
     /** Counter implementation selected for this benchmark run. */
     @Param({"OPTIMISTIC", "PESSIMISTIC", "LOCKED", "ATOMIC"}) public Engine engine;
-    private TVar<Long> value;
-    private AtomicLong atomic;
-    private long locked;
+    private TVar<Long> transactionalCounter;
+    private AtomicLong atomicCounter;
+    private long lockedCounter;
     private final ReentrantLock lock = new ReentrantLock();
     private TransactionHints hints;
     private final List<CounterWorker> workers = new CopyOnWriteArrayList<>();
@@ -47,9 +47,9 @@ public class CounterBenchmark extends BenchmarkDefaults {
     /** Resets the counters and worker registry and chooses hints for the selected engine. */
     @Setup(Level.Iteration)
     public void setup() {
-        value = new TVar<>(0L);
-        atomic = new AtomicLong();
-        locked = 0;
+        transactionalCounter = new TVar<>(0L);
+        atomicCounter = new AtomicLong();
+        lockedCounter = 0;
         workers.clear();
         hints = engine == Engine.PESSIMISTIC ? new TransactionHints(0, 1) : new TransactionHints(1, 0);
     }
@@ -88,12 +88,12 @@ public class CounterBenchmark extends BenchmarkDefaults {
     public void increment(CounterWorker worker, Control control) {
         if (inactive(control)) return;
         switch (engine) {
-            case ATOMIC -> atomic.incrementAndGet();
+            case ATOMIC -> atomicCounter.incrementAndGet();
             case LOCKED -> {
                 lock.lock();
-                try { locked++; } finally { lock.unlock(); }
+                try { lockedCounter++; } finally { lock.unlock(); }
             }
-            default -> Weft.atomic(() -> Weft.write(value, Weft.read(value) + 1), hints);
+            default -> Weft.atomic(() -> Weft.write(transactionalCounter, Weft.read(transactionalCounter) + 1), hints);
         }
         worker.increments++;
     }
@@ -109,12 +109,12 @@ public class CounterBenchmark extends BenchmarkDefaults {
     public long read(CounterWorker worker, Control control) {
         if (inactive(control)) return 0;
         switch (engine) {
-            case ATOMIC -> worker.result = atomic.get();
+            case ATOMIC -> worker.result = atomicCounter.get();
             case LOCKED -> {
                 lock.lock();
-                try { worker.result = locked; } finally { lock.unlock(); }
+                try { worker.result = lockedCounter; } finally { lock.unlock(); }
             }
-            default -> Weft.atomic(() -> worker.result = Weft.read(value), hints);
+            default -> Weft.atomic(() -> worker.result = Weft.read(transactionalCounter), hints);
         }
         return worker.result;
     }
@@ -129,9 +129,9 @@ public class CounterBenchmark extends BenchmarkDefaults {
         long expected = workers.stream().mapToLong(w -> w.increments).sum();
         long[] actual = new long[1];
         switch (engine) {
-            case ATOMIC -> actual[0] = atomic.get();
-            case LOCKED -> actual[0] = locked;
-            default -> Weft.atomic(() -> actual[0] = Weft.read(value));
+            case ATOMIC -> actual[0] = atomicCounter.get();
+            case LOCKED -> actual[0] = lockedCounter;
+            default -> Weft.atomic(() -> actual[0] = Weft.read(transactionalCounter));
         }
         if (actual[0] != expected) throw new AssertionError("Lost increments: " + actual[0] + " != " + expected);
     }

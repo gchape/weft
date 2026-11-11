@@ -79,7 +79,7 @@ class TVarTest {
                 acquired.await();
                 assertThat(snapshot.read(variable)).isZero();
                 Weft.atomic(() -> assertThat(Weft.read(variable)).isEqualTo(1));
-                assertThat(variable.tryLock()).isFalse();
+                assertThat(variable.tryWriteLock()).isFalse();
                 assertThatThrownBy(() -> variable.expandHistoryByFactor(2))
                         .isInstanceOf(IllegalStateException.class);
                 snapshot.commit();
@@ -91,13 +91,13 @@ class TVarTest {
     }
 
     @Test
-    @DisplayName("tryLock returns false when another thread holds the lock")
-    void tryLockReturnsFalseWhenLocked() throws InterruptedException {
+    @DisplayName("tryWriteLock returns false when another thread holds the lock")
+    void tryWriteLockReturnsFalseWhenLocked() throws InterruptedException {
         TVar<Integer> v = new TVar<>(0);
         v.lock.writeLock().lock();
         try {
             AtomicReference<@Nullable Boolean> acquired = new AtomicReference<>();
-            Thread t = Thread.ofVirtual().start(() -> acquired.set(v.tryLock()));
+            Thread t = Thread.ofVirtual().start(() -> acquired.set(v.tryWriteLock()));
             t.join(1_000);
             assertThat(acquired.get()).isFalse();
         } finally {
@@ -106,10 +106,10 @@ class TVarTest {
     }
 
     @Test
-    @DisplayName("unlock is idempotent when lock not held")
-    void unlockIsIdempotent() {
+    @DisplayName("unlockWriteLock is idempotent when lock not held")
+    void unlockWriteLockIsIdempotent() {
         TVar<Integer> v = new TVar<>(0);
-        assertThatCode(v::unlock).doesNotThrowAnyException();
+        assertThatCode(v::unlockWriteLock).doesNotThrowAnyException();
     }
 
     @Test

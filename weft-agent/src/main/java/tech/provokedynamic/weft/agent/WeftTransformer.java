@@ -63,8 +63,8 @@ public final class WeftTransformer implements ClassFileTransformer {
      * @return whether at least one plain atomic call has an eligible body
      */
     private static boolean collectDirectCounts(ClassModel classModel,
-                                            Map<String, Counts> directCounts,
-                                            Map<String, List<String>> nestedBodies) {
+                                               Map<String, OperationCounts> directCounts,
+                                               Map<String, List<String>> nestedBodies) {
         boolean hasEligibleAtomicCall = false;
         var owner = classModel.thisClass().asSymbol();
 
@@ -72,7 +72,8 @@ public final class WeftTransformer implements ClassFileTransformer {
             if (method.code().isEmpty()) continue;
 
             var methodKey = methodKey(method);
-            int reads = 0, writes = 0;
+            int reads = 0;
+            int writes = 0;
             String pendingBodyKey = null;
 
             for (var element : method.code().get()) {
@@ -83,7 +84,7 @@ public final class WeftTransformer implements ClassFileTransformer {
                         var bodyKey = localBodyKey(dynamicCall, owner);
                         if (bodyKey != null) {
                             pendingBodyKey = bodyKey;
-                            directCounts.putIfAbsent(bodyKey, Counts.ZERO);
+                            directCounts.putIfAbsent(bodyKey, OperationCounts.ZERO);
                         }
                     }
                     case InvokeInstruction invocation
@@ -107,30 +108,32 @@ public final class WeftTransformer implements ClassFileTransformer {
                     }
                 }
             }
-            directCounts.put(methodKey, new Counts(reads, writes));
+            directCounts.put(methodKey, new OperationCounts(reads, writes));
         }
         return hasEligibleAtomicCall;
     }
 
     /** Resolves each method's direct counts and reachable nested transaction bodies. */
-    private static Map<String, Counts> resolveCounts(Map<String, Counts> directCounts,
-                                                     Map<String, List<String>> nestedBodies) {
-        var resolvedCounts = new HashMap<String, Counts>(directCounts.size() * 2);
+    private static Map<String, OperationCounts> resolveCounts(Map<String, OperationCounts> directCounts,
+                                                              Map<String, List<String>> nestedBodies) {
+        var resolvedCounts = new HashMap<String, OperationCounts>(directCounts.size() * 2);
         var visiting = new HashSet<String>();
-        directCounts.keySet().forEach(m -> resolvedCounts.put(m, accumulate(m, directCounts, nestedBodies, visiting)));
+        for (String methodKey : directCounts.keySet()) {
+            resolvedCounts.put(methodKey, accumulate(methodKey, directCounts, nestedBodies, visiting));
+        }
         return resolvedCounts;
     }
 
     /** Accumulates closure counts; recursive references contribute no additional cycle count. */
-    private static Counts accumulate(String method,
-                                     Map<String, Counts> directCounts,
-                                     Map<String, List<String>> nestedBodies,
-                                     Set<String> visiting) {
-        if (!visiting.add(method)) return Counts.ZERO;
-        var total = directCounts.getOrDefault(method, Counts.ZERO);
-        for (var child : nestedBodies.getOrDefault(method, List.of()))
+    private static OperationCounts accumulate(String methodKey,
+                                              Map<String, OperationCounts> directCounts,
+                                              Map<String, List<String>> nestedBodies,
+                                              Set<String> visiting) {
+        if (!visiting.add(methodKey)) return OperationCounts.ZERO;
+        var total = directCounts.getOrDefault(methodKey, OperationCounts.ZERO);
+        for (var child : nestedBodies.getOrDefault(methodKey, List.of()))
             total = total.add(accumulate(child, directCounts, nestedBodies, visiting));
-        visiting.remove(method);
+        visiting.remove(methodKey);
         return total;
     }
 
@@ -145,7 +148,7 @@ public final class WeftTransformer implements ClassFileTransformer {
         if (!dynamicCall.typeSymbol().returnType().equals(RUNNABLE_CLASS)) return null;
         return dynamicCall.bootstrapArgs().stream()
                 .filter(DirectMethodHandleDesc.class::isInstance)
-                .map(a -> (DirectMethodHandleDesc) a)
+                .map(DirectMethodHandleDesc.class::cast)
                 .filter(methodHandle -> methodHandle.owner().equals(owner))
                 .map(methodHandle -> methodHandle.methodName() + methodHandle.lookupDescriptor())
                 .findFirst()
@@ -173,7 +176,7 @@ public final class WeftTransformer implements ClassFileTransformer {
                     loader == null ? ClassLoader.getPlatformClassLoader() : loader).cached();
             var classFile = ClassFile.of(ClassFile.ClassHierarchyResolverOption.of(resolver));
             var classModel = CLASS_FILE.parse(classfileBuffer);
-            var directCounts = new HashMap<String, Counts>();
+            var directCounts = new HashMap<String, OperationCounts>();
             var nestedBodies = new HashMap<String, List<String>>();
             if (!collectDirectCounts(classModel, directCounts, nestedBodies)) return null;
 
@@ -188,11 +191,11 @@ public final class WeftTransformer implements ClassFileTransformer {
         }
     }
 
-    private record Counts(int reads, int writes) {
-        static final Counts ZERO = new Counts(0, 0);
+    private record OperationCounts(int reads, int writes) {
+        static final OperationCounts ZERO = new OperationCounts(0, 0);
 
-        Counts add(Counts other) {
-            return new Counts(reads + other.reads, writes + other.writes);
+        OperationCounts add(OperationCounts other) {
+            return new OperationCounts(reads + other.reads, writes + other.writes);
         }
     }
 
@@ -203,11 +206,11 @@ public final class WeftTransformer implements ClassFileTransformer {
      */
     private static final class HintsInjectingTransform implements CodeTransform {
 
-        private final Map<String, Counts> resolvedCounts;
+        private final Map<String, OperationCounts> resolvedCounts;
         private final ClassDesc owner;
         private String pendingBodyKey;
 
-        HintsInjectingTransform(Map<String, Counts> resolvedCounts, ClassDesc owner) {
+        HintsInjectingTransform(Map<String, OperationCounts> resolvedCounts, ClassDesc owner) {
             this.resolvedCounts = resolvedCounts;
             this.owner = owner;
         }
@@ -229,7 +232,7 @@ public final class WeftTransformer implements ClassFileTransformer {
                         && invocation.typeSymbol().equals(ATOMIC_METHOD)
                         && argumentBodyKey != null -> {
 
-                    var counts = resolvedCounts.getOrDefault(argumentBodyKey, Counts.ZERO);
+                    var counts = resolvedCounts.getOrDefault(argumentBodyKey, OperationCounts.ZERO);
                     codeBuilder.new_(HINTS_CLASS)
                             .dup()
                             .loadConstant(counts.reads())

@@ -60,8 +60,8 @@ public final class WeftAgent {
         }
         var prefixes = Arrays.stream(agentArguments.split(","))
                 .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(s -> s.replace('.', '/'))
+                .filter(prefix -> !prefix.isEmpty())
+                .map(prefix -> prefix.replace('.', '/'))
                 .collect(Collectors.toUnmodifiableSet());
         if (prefixes.isEmpty()) {
             throw new IllegalArgumentException("Weft agent requires at least one non-empty scan prefix");

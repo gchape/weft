@@ -27,7 +27,7 @@ final class Transaction implements TransactionContext, AutoCloseable {
     private final ConcurrencyProtocol protocol;
     private final Map<TVar<?>, Long> readSet = new HashMap<>();
     private final Map<TVar<?>, @Nullable Object> writeSet = new TreeMap<>();
-    private final List<TVar<?>> locks = new ArrayList<>();
+    private final List<TVar<?>> ownedWriteLocks = new ArrayList<>();
     private boolean invalidated;
 
     Transaction(ConcurrencyProtocol protocol) {
@@ -68,18 +68,18 @@ final class Transaction implements TransactionContext, AutoCloseable {
     }
 
     /** Acquires and records a write lock without waiting while other locks may be held. */
-    void lock(TVar<?> variable) {
+    void lockForWrite(TVar<?> variable) {
         requireOwnerThread();
         if (variable.lock.isWriteLockedByCurrentThread()) return;
-        if (!variable.tryLock()) {
+        if (!variable.tryWriteLock()) {
             throw conflict();
         }
-        locks.add(variable);
+        ownedWriteLocks.add(variable);
     }
 
     /** Acquires buffered variables in their globally consistent identity order. */
     void lockWriteSet() {
-        writeSet.keySet().forEach(this::lock);
+        writeSet.keySet().forEach(this::lockForWrite);
     }
 
     /**
@@ -95,12 +95,17 @@ final class Transaction implements TransactionContext, AutoCloseable {
         if (writeSet.isEmpty()) return;
         protocol.beforeCommit(this);
         long commitVersion = COMMIT_CLOCK.advance();
+        validateReadSet();
+        writeSet.forEach((variable, value) -> publishWrite(variable, value, commitVersion));
+    }
+
+    /** Checks that every observed version still belongs to the attempt's snapshot. */
+    private void validateReadSet() {
         readSet.forEach((variable, version) -> {
             if (version > readVersion || variable.isLockedByOtherThread() || variable.version != version) {
                 throw conflict();
             }
         });
-        writeSet.forEach((variable, value) -> publishWrite(variable, value, commitVersion));
     }
 
     /** Marks the attempt invalid even if application code catches a retry signal. */
@@ -128,9 +133,9 @@ final class Transaction implements TransactionContext, AutoCloseable {
     @Override
     public void close() {
         requireOwnerThread();
-        for (int i = locks.size() - 1; i >= 0; i--) {
-            locks.get(i).unlock();
+        for (int i = ownedWriteLocks.size() - 1; i >= 0; i--) {
+            ownedWriteLocks.get(i).unlockWriteLock();
         }
-        locks.clear();
+        ownedWriteLocks.clear();
     }
 }

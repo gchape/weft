@@ -55,11 +55,11 @@ public final class TVar<T extends @Nullable Object> implements Comparable<TVar<?
      * @throws IllegalStateException if another thread holds the variable's lock
      */
     public void expandHistoryByFactor(float factor) {
-        if (!tryLock()) throw new IllegalStateException("Cannot resize a locked variable's history");
+        if (!tryWriteLock()) throw new IllegalStateException("Cannot resize a locked variable's history");
         try {
             history.expandByFactor(factor);
         } finally {
-            unlock();
+            unlockWriteLock();
         }
     }
 
@@ -72,11 +72,11 @@ public final class TVar<T extends @Nullable Object> implements Comparable<TVar<?
      * @throws IllegalStateException if another thread holds the variable's lock
      */
     public void shrinkHistoryByFactor(float factor) {
-        if (!tryLock()) throw new IllegalStateException("Cannot resize a locked variable's history");
+        if (!tryWriteLock()) throw new IllegalStateException("Cannot resize a locked variable's history");
         try {
             history.shrinkByFactor(factor);
         } finally {
-            unlock();
+            unlockWriteLock();
         }
     }
 
@@ -91,11 +91,11 @@ public final class TVar<T extends @Nullable Object> implements Comparable<TVar<?
         return lock.isWriteLocked() && !lock.isWriteLockedByCurrentThread();
     }
 
-    boolean tryLock() {
+    boolean tryWriteLock() {
         return lock.writeLock().tryLock();
     }
 
-    void unlock() {
+    void unlockWriteLock() {
         if (lock.isWriteLockedByCurrentThread()) lock.writeLock().unlock();
     }
 
@@ -105,7 +105,7 @@ public final class TVar<T extends @Nullable Object> implements Comparable<TVar<?
     }
 
     /** Releases the current thread's temporary history read lock. */
-    void unlockRead() {
+    void unlockReadLock() {
         lock.readLock().unlock();
     }
 

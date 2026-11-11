@@ -7,9 +7,9 @@ import tech.provokedynamic.weft.exception.MaxRetriesExceededException;
 import tech.provokedynamic.weft.exception.VersionEvictedException;
 import tech.provokedynamic.weft.retry.AdaptiveBackoff;
 
-import java.util.Objects;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Objects;
 
 /**
  * Runs transactions over {@link TVar} values with bounded conflict retries.
