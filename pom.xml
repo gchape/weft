@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
 
     <name>IASTM — Instrumented Adaptive Software Transactional Memory</name>
+    <url>https://github.com/gchape/iastm</url>
     <description>
         A JVM-native STM library with bytecode-level instrumentation (Java agent) that
         automatically injects read/write metrics to drive adaptive optimistic/pessimistic
@@ -26,20 +27,24 @@
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <lombok.version>1.18.46</lombok.version>
-        <slf4j.version>2.0.17</slf4j.version>
-        <logback.version>1.5.34</logback.version>
+        <lombok.version>1.18.48</lombok.version>
+        <slf4j.version>2.0.20</slf4j.version>
+        <logback.version>1.6.6</logback.version>
 
-        <bytebuddy.version>1.18.10</bytebuddy.version>
+        <bytebuddy.version>1.18.17</bytebuddy.version>
 
-        <junit.version>6.1.0</junit.version>
+        <junit.version>6.1.3</junit.version>
         <assertj.version>3.27.7</assertj.version>
 
         <jmh.version>1.37</jmh.version>
 
-        <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
         <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
+        <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
+        <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
+        <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -104,25 +109,38 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${maven-clean-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven-resources-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven-jar-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin.version}</version>
+                    <configuration>
+                        <excludePackageNames>*.jmh_generated</excludePackageNames>
+                        <failOnWarnings>true</failOnWarnings>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven-compiler-plugin.version}</version>
                     <configuration>
-                        <release>25</release>
-                        <compilerArgs>
-                            <arg>--enable-preview</arg>
-                        </compilerArgs>
-                        <annotationProcessorPaths>
-                            <path>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok</artifactId>
-                                <version>${lombok.version}</version>
-                            </path>
-                            <path>
-                                <groupId>org.openjdk.jmh</groupId>
-                                <artifactId>jmh-generator-annprocess</artifactId>
-                                <version>${jmh.version}</version>
-                            </path>
-                        </annotationProcessorPaths>
+                        <release>${maven.compiler.release}</release>
                     </configuration>
                 </plugin>
 
@@ -130,9 +148,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
-                    <configuration>
-                        <argLine>--enable-preview</argLine>
-                    </configuration>
                 </plugin>
 
                 <plugin>

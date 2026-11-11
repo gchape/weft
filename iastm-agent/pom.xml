@@ -18,6 +18,21 @@
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy-agent</artifactId>
         </dependency>
+        <dependency>
+            <groupId>tech.provokedynamic</groupId>
+            <artifactId>iastm-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
