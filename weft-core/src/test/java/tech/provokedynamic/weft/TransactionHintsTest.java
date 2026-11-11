@@ -9,20 +9,20 @@ class TransactionHintsTest {
 
     @Test
     void derivesTotalOps() {
-        var m = new TransactionHints(3, 2);
-        assertThat(m.totalOps()).isEqualTo(5);
+        var hints = new TransactionHints(3, 2);
+        assertThat(hints.totalOps()).isEqualTo(5);
     }
 
     @Test
     void threeArgConstructorPreservesTotalOps() {
-        var m = new TransactionHints(3, 2, 99);
-        assertThat(m.totalOps()).isEqualTo(99);
+        var hints = new TransactionHints(3, 2, 99);
+        assertThat(hints.totalOps()).isEqualTo(99);
     }
 
     @Test
     void zeroOps() {
-        var m = new TransactionHints(0, 0);
-        assertThat(m.totalOps()).isZero();
+        var hints = new TransactionHints(0, 0);
+        assertThat(hints.totalOps()).isZero();
     }
 
     @Test

@@ -1,5 +1,6 @@
 package tech.provokedynamic.weft.atomic;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ class WeftTest {
 
         @Test
         @DisplayName("writes remain buffered until commit")
-        void writeVisibleBeforeCommit() {
+        void readsBufferedWritesBeforeCommit() {
             TVar<Integer> v = new TVar<>(1);
             Weft.atomic(() -> {
                 Weft.write(v, 99);
@@ -59,7 +60,7 @@ class WeftTest {
                 Weft.write(v, "b");
                 Weft.write(v, "c");
             });
-            AtomicReference<String> out = new AtomicReference<>();
+            AtomicReference<@Nullable String> out = new AtomicReference<>();
             Weft.atomic(() -> out.set(Weft.read(v)));
             assertThat(out.get()).isEqualTo("c");
         }
@@ -74,7 +75,7 @@ class WeftTest {
         }
 
         @Test
-        @DisplayName("nested start inherits outer strategy")
+        @DisplayName("nested atomic call inherits outer strategy")
         void nestedInheritsStrategy() {
             TVar<Integer> outer = new TVar<>(0);
             TVar<Integer> inner = new TVar<>(0);
@@ -112,38 +113,38 @@ class WeftTest {
         }
 
         @Test
-        @DisplayName("pessimistic strategy selected via metrics – write is visible")
-        void pessimisticViaMetrics() {
+        @DisplayName("pessimistic strategy selected via hints – write is visible")
+        void pessimisticViaHints() {
             TVar<Long> v = new TVar<>(0L);
-            TransactionHints metrics = new TransactionHints(1, 9);
-            Weft.atomic(() -> Weft.write(v, 42L), metrics);
-            AtomicReference<Long> out = new AtomicReference<>();
+            TransactionHints hints = new TransactionHints(1, 9);
+            Weft.atomic(() -> Weft.write(v, 42L), hints);
+            AtomicReference<@Nullable Long> out = new AtomicReference<>();
             Weft.atomic(() -> out.set(Weft.read(v)));
             assertThat(out.get()).isEqualTo(42L);
         }
 
         @Test
-        @DisplayName("optimistic strategy selected via read-heavy metrics")
-        void optimisticViaMetrics() {
+        @DisplayName("optimistic strategy selected via read-heavy hints")
+        void optimisticViaHints() {
             TVar<String> v = new TVar<>("x");
-            TransactionHints metrics = new TransactionHints(9, 1);
-            AtomicReference<String> out = new AtomicReference<>();
-            Weft.atomic(() -> out.set(Weft.read(v)), metrics);
+            TransactionHints hints = new TransactionHints(9, 1);
+            AtomicReference<@Nullable String> out = new AtomicReference<>();
+            Weft.atomic(() -> out.set(Weft.read(v)), hints);
             assertThat(out.get()).isEqualTo("x");
         }
 
         @Test
-        @DisplayName("zero-ops metrics defaults to OPTIMISTIC")
-        void zeroOpsMetricsDefaultsOptimistic() {
+        @DisplayName("zero-ops hints defaults to OPTIMISTIC")
+        void zeroOpsHintsDefaultsOptimistic() {
             TVar<Integer> v = new TVar<>(5);
-            TransactionHints metrics = new TransactionHints(0, 0);
+            TransactionHints hints = new TransactionHints(0, 0);
             AtomicInteger out = new AtomicInteger();
-            Weft.atomic(() -> out.set(Weft.read(v)), metrics);
+            Weft.atomic(() -> out.set(Weft.read(v)), hints);
             assertThat(out.get()).isEqualTo(5);
         }
 
         @Test
-        @DisplayName("exception inside body propagates out of start")
+        @DisplayName("exception inside body propagates out of atomic")
         void bodyExceptionPropagates() {
             TVar<Integer> v = new TVar<>(0);
             assertThatThrownBy(() ->
@@ -186,9 +187,9 @@ class WeftTest {
         }
 
         @Test
-        @DisplayName("snapshot isolation: reader sees consistent state mid-write")
+        @DisplayName("reader sees a consistent snapshot during concurrent updates")
         @Timeout(10)
-        void snapshotIsolation() throws Exception {
+        void consistentSnapshot() throws Exception {
             TVar<Integer> a = new TVar<>(10);
             TVar<Integer> b = new TVar<>(10);
             List<Integer> sums = new CopyOnWriteArrayList<>();
@@ -233,14 +234,14 @@ class WeftTest {
             Weft.atomic(() -> assertThat(Weft.read(variable)).isEqualTo((long) threads * ops));
         }
 
-        private void runConcurrentIncrements(TVar<Integer> counter, TransactionHints metrics) throws Exception {
+        private void runConcurrentIncrements(TVar<Integer> counter, @Nullable TransactionHints hints) throws Exception {
             List<Runnable> tasks = new ArrayList<>();
             for (int i = 0; i < THREADS; i++) {
                 tasks.add(() -> {
                     for (int j = 0; j < OPS_PER_THREAD; j++) {
                         Runnable increment = () -> Weft.write(counter, Weft.read(counter) + 1);
-                        if (metrics == null) Weft.atomic(increment);
-                        else Weft.atomic(increment, metrics);
+                        if (hints == null) Weft.atomic(increment);
+                        else Weft.atomic(increment, hints);
                     }
                 });
             }
@@ -266,31 +267,31 @@ class WeftTest {
 
     @Nested
     @DisplayName("TransactionHints and strategy selection")
-    class MetricsTests {
+    class HintsTests {
 
         @Test
         @DisplayName("two-arg constructor derives totalOps")
         void twoArgConstructor() {
-            TransactionHints m = new TransactionHints(3, 7);
-            assertThat(m.readOps()).isEqualTo(3);
-            assertThat(m.writeOps()).isEqualTo(7);
-            assertThat(m.totalOps()).isEqualTo(10);
+            TransactionHints hints = new TransactionHints(3, 7);
+            assertThat(hints.readOps()).isEqualTo(3);
+            assertThat(hints.writeOps()).isEqualTo(7);
+            assertThat(hints.totalOps()).isEqualTo(10);
         }
 
         @Test
         @DisplayName("three-arg constructor stores values as-is")
         void threeArgConstructor() {
-            TransactionHints m = new TransactionHints(3, 7, 999);
-            assertThat(m.totalOps()).isEqualTo(999);
+            TransactionHints hints = new TransactionHints(3, 7, 999);
+            assertThat(hints.totalOps()).isEqualTo(999);
         }
 
         @Test
         @DisplayName("read-heavy threshold: 80% reads → OPTIMISTIC")
         void readHeavy80Percent() {
             TVar<Integer> v = new TVar<>(1);
-            TransactionHints metrics = new TransactionHints(8, 2);
+            TransactionHints hints = new TransactionHints(8, 2);
             AtomicInteger out = new AtomicInteger();
-            Weft.atomic(() -> out.set(Weft.read(v)), metrics);
+            Weft.atomic(() -> out.set(Weft.read(v)), hints);
             assertThat(out.get()).isEqualTo(1);
         }
 
@@ -298,8 +299,8 @@ class WeftTest {
         @DisplayName("write-heavy threshold: 60% writes → PESSIMISTIC")
         void writeHeavy60Percent() {
             TVar<Integer> v = new TVar<>(0);
-            TransactionHints metrics = new TransactionHints(4, 6);
-            Weft.atomic(() -> Weft.write(v, 77), metrics);
+            TransactionHints hints = new TransactionHints(4, 6);
+            Weft.atomic(() -> Weft.write(v, 77), hints);
             assertThat(v.value).isEqualTo(77);
         }
 
@@ -307,9 +308,9 @@ class WeftTest {
         @DisplayName("mixed (50/50) falls back to OPTIMISTIC")
         void mixedFallsBackToOptimistic() {
             TVar<Integer> v = new TVar<>(3);
-            TransactionHints metrics = new TransactionHints(5, 5);
+            TransactionHints hints = new TransactionHints(5, 5);
             AtomicInteger out = new AtomicInteger();
-            Weft.atomic(() -> out.set(Weft.read(v)), metrics);
+            Weft.atomic(() -> out.set(Weft.read(v)), hints);
             assertThat(out.get()).isEqualTo(3);
         }
 

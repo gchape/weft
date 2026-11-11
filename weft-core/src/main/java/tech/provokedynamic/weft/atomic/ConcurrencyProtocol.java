@@ -1,88 +1,91 @@
 package tech.provokedynamic.weft.atomic;
 
+import org.jspecify.annotations.Nullable;
+
+import tech.provokedynamic.weft.exception.VersionEvictedException;
+
 /**
  * Stateless strategies for validated reads and write-lock timing.
  * {@link Transaction} owns all attempt state, publication, and lock cleanup.
  */
-public sealed interface ConcurrencyProtocol {
-
+enum ConcurrencyProtocol {
     /**
-     * Reads a committed value while checking snapshot visibility and writer ownership.
+     * Reads the snapshot and defers write locks until commit.
      *
-     * @param variable variable to read
-     * @param tx owning transaction attempt
-     * @param <T> value type
-     * @return the validated value, which may be null
+     * <p>Visible latest values use validated volatile reads without scanning history or
+     * acquiring a read lock. Older snapshots share the TVar read lock, which excludes
+     * appends and resizing while allowing other historical and latest-value readers.
      */
-    <T> T read(TVar<T> variable, Transaction tx);
+    OPTIMISTIC {
+        @Override
+        <T extends @Nullable Object> T read(TVar<T> variable, Transaction transaction) {
+            long version = beginRead(variable, transaction);
+            if (version <= transaction.readVersion()) {
+                T value = variable.value;
+                validateRead(variable, version, transaction);
+                return value;
+            }
 
-    /**
-     * Prepares a variable for buffering; the default requires no eager lock.
-     *
-     * @param variable variable being written
-     * @param tx owning transaction attempt
-     */
-    default void beforeWrite(TVar<?> variable, Transaction tx) {
+            if (!variable.tryReadLock()) throw transaction.conflict();
+            try {
+                T value = variable.history.scan(transaction.readVersion());
+                transaction.recordRead(variable, variable.version);
+                return value;
+            } catch (VersionEvictedException evicted) {
+                transaction.invalidate();
+                throw evicted;
+            } finally {
+                variable.unlockRead();
+            }
+        }
+
+        @Override
+        void beforeCommit(Transaction transaction) {
+            transaction.lockWriteSet();
+        }
+    },
+
+    /** Reads validated live values and acquires a write lock before buffering each variable. */
+    PESSIMISTIC_WRITE {
+        @Override
+        <T extends @Nullable Object> T read(TVar<T> variable, Transaction transaction) {
+            long version = beginRead(variable, transaction);
+            if (version > transaction.readVersion()) throw transaction.conflict();
+            T value = variable.value;
+            validateRead(variable, version, transaction);
+            return value;
+        }
+
+        @Override
+        void beforeWrite(TVar<?> variable, Transaction transaction) {
+            transaction.lock(variable);
+        }
+    };
+
+    /** Reads a committed value while checking snapshot visibility and writer ownership. */
+    abstract <T extends @Nullable Object> T read(TVar<T> variable, Transaction transaction);
+
+    /** Prepares a variable for buffering; optimistic writes require no eager lock. */
+    void beforeWrite(TVar<?> variable, Transaction transaction) {
     }
 
-    /**
-     * Acquires any locks deferred until commit; the default already holds the needed locks.
-     *
-     * @param tx owning transaction attempt
-     */
-    default void beforeCommit(Transaction tx) {
+    /** Acquires any deferred write locks; pessimistic writes already hold them. */
+    void beforeCommit(Transaction transaction) {
     }
 
-    private static long beginRead(TVar<?> variable, Transaction tx) {
+    private static long beginRead(TVar<?> variable, Transaction transaction) {
+        transaction.requireOwnerThread();
         long version = variable.version;
-        if (version > tx.readPoint() || variable.isLockedByOtherThread()) {
-            throw tx.conflict();
+        if (variable.isLockedByOtherThread()) {
+            throw transaction.conflict();
         }
         return version;
     }
 
-    private static void finishRead(TVar<?> variable, long version, Transaction tx) {
+    private static void validateRead(TVar<?> variable, long version, Transaction transaction) {
         if (variable.version != version || variable.isLockedByOtherThread()) {
-            throw tx.conflict();
+            throw transaction.conflict();
         }
-        tx.recordReadVersion(variable, version);
-    }
-
-    /** Reads version history and defers write-lock acquisition until commit. */
-    enum Optimistic implements ConcurrencyProtocol {
-        /** Shared stateless protocol instance. */
-        INSTANCE;
-
-        @Override
-        public <T> T read(TVar<T> variable, Transaction tx) {
-            long version = beginRead(variable, tx);
-            T value = variable.history.scan(tx.readPoint());
-            finishRead(variable, version, tx);
-            return value;
-        }
-
-        @Override
-        public void beforeCommit(Transaction tx) {
-            tx.acquirePendingWriteLocks();
-        }
-    }
-
-    /** Reads validated live values and acquires a write lock before buffering each variable. */
-    enum PessimisticWrite implements ConcurrencyProtocol {
-        /** Shared stateless protocol instance. */
-        INSTANCE;
-
-        @Override
-        public <T> T read(TVar<T> variable, Transaction tx) {
-            long version = beginRead(variable, tx);
-            T value = variable.value;
-            finishRead(variable, version, tx);
-            return value;
-        }
-
-        @Override
-        public void beforeWrite(TVar<?> variable, Transaction tx) {
-            tx.acquireWriteLock(variable);
-        }
+        transaction.recordRead(variable, version);
     }
 }

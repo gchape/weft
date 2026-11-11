@@ -1,10 +1,13 @@
 package tech.provokedynamic.weft.mvcc;
 
+import org.jspecify.annotations.Nullable;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tech.provokedynamic.weft.exception.VersionEvictedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CircularVersionHistoryTest {
@@ -17,7 +20,7 @@ class CircularVersionHistoryTest {
     }
 
     @Test
-    @DisplayName("scan returns latest value at or before readPoint")
+    @DisplayName("scan returns latest value at or before readVersion")
     void scanSnapshotSemantics() {
         CircularVersionHistory<Integer> h = new CircularVersionHistory<>(0);
         h.append(10, 1L);
@@ -47,7 +50,7 @@ class CircularVersionHistoryTest {
 
     @Test
     void expansionAfterWraparoundDoesNotResurrectEvictedEntries() {
-        var history = new CircularVersionHistory<Integer>(0);
+        var history = new CircularVersionHistory<>(0);
         for (int i = 1; i <= 100; i++) history.append(i, i);
 
         history.expandByFactor(2);
@@ -60,7 +63,7 @@ class CircularVersionHistoryTest {
 
     @Test
     void shrinkThenExpandRetainsOnlyTheSurvivingWindow() {
-        var history = new CircularVersionHistory<Integer>(0);
+        var history = new CircularVersionHistory<>(0);
         history.expandByFactor(4);
         for (int i = 1; i <= 200; i++) history.append(i, i);
 
@@ -75,11 +78,11 @@ class CircularVersionHistoryTest {
 
     @Test
     void expansionOfPartiallyFilledHistoryPreservesInitialAndNullValues() {
-        var history = new CircularVersionHistory<String>(null);
+        var history = new CircularVersionHistory<@Nullable String>(null);
         history.append("next", 3);
         history.expandByFactor(3);
-        assertThat(history.scan(0)).isNull();
-        assertThat(history.scan(2)).isNull();
+        assertNull(history.scan(0));
+        assertNull(history.scan(2));
         assertThat(history.scan(3)).isEqualTo("next");
     }
 
@@ -105,7 +108,7 @@ class CircularVersionHistoryTest {
     }
 
     @Test
-    @DisplayName("VersionEvictedException message includes readPoint")
+    @DisplayName("VersionEvictedException message includes readVersion")
     void evictedExceptionMessage() {
         assertThatThrownBy(() -> {
             throw new VersionEvictedException(42L);

@@ -1,33 +1,35 @@
 package tech.provokedynamic.weft.mvcc;
 
+import org.jspecify.annotations.Nullable;
+
 import tech.provokedynamic.weft.exception.VersionEvictedException;
 
 /**
  * Circular version history with binary-search snapshot lookup and capacities from 32 to 2,048.
  *
  * <p>Commit stamps must be appended in increasing order. This class does not synchronize
- * access: callers must coordinate reads with writers and resizing. TVars use write locks
- * and validate their version before and after reading history.
+ * access: callers must coordinate reads with writers and resizing. TVars hold their
+ * shared read lock while scanning, and their write lock while appending or resizing history.
  *
- * @param <T> stored value type
+ * @param <T> stored value type, including its nullability
  */
-public final class CircularVersionHistory<T> implements VersionHistory<T> {
+public final class CircularVersionHistory<T extends @Nullable Object> implements VersionHistory<T> {
 
-    private static final int INITIAL_CAPACITY = 32;
+    private static final int MIN_CAPACITY = 32;
     private static final int MAX_CAPACITY = 2048;
 
     private long[] versions;
-    private Object[] values;
+    private @Nullable Object[] values;
     private long nextPosition;
 
     /**
      * Creates a 32-entry history containing the initial value at version zero.
      *
-     * @param initial initial value, which may be null
+     * @param initial initial value, which may be null when {@code T} is nullable
      */
     public CircularVersionHistory(T initial) {
-        versions = new long[INITIAL_CAPACITY];
-        values = new Object[INITIAL_CAPACITY];
+        versions = new long[MIN_CAPACITY];
+        values = new Object[MIN_CAPACITY];
         versions[0] = 0L;
         values[0] = initial;
         nextPosition = 1L;
@@ -43,20 +45,20 @@ public final class CircularVersionHistory<T> implements VersionHistory<T> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public T scan(long readPoint) {
+    public T scan(long readVersion) {
         long readPosition = nextPosition;
         int capacity = values.length;
         long retainedCount = Math.min(readPosition, capacity);
         long lowerBound = readPosition - retainedCount;
         long upperBound = readPosition - 1;
 
-        if (readPoint < versions[(int) (lowerBound % capacity)]) {
-            throw new VersionEvictedException(readPoint);
+        if (readVersion < versions[(int) (lowerBound % capacity)]) {
+            throw new VersionEvictedException(readVersion);
         }
 
         while (lowerBound < upperBound) {
             long midpoint = lowerBound + ((upperBound - lowerBound + 1) >>> 1);
-            if (versions[(int) (midpoint % capacity)] <= readPoint) {
+            if (versions[(int) (midpoint % capacity)] <= readVersion) {
                 lowerBound = midpoint;
             } else {
                 upperBound = midpoint - 1;
@@ -81,7 +83,7 @@ public final class CircularVersionHistory<T> implements VersionHistory<T> {
             throw new IllegalArgumentException("Shrink factor must be finite and in (0, 1]");
         }
         int capacity = values.length;
-        int newCapacity = Math.max((int) (capacity * factor), INITIAL_CAPACITY);
+        int newCapacity = Math.max((int) (capacity * factor), MIN_CAPACITY);
         if (newCapacity < capacity) resize(newCapacity);
     }
 
@@ -89,7 +91,7 @@ public final class CircularVersionHistory<T> implements VersionHistory<T> {
     private void resize(int newCapacity) {
         int capacity = values.length;
         long[] resizedVersions = new long[newCapacity];
-        Object[] resizedValues = new Object[newCapacity];
+        @Nullable Object[] resizedValues = new Object[newCapacity];
 
         long retainedCount = Math.min(Math.min(nextPosition, capacity), newCapacity);
         long oldestPosition = nextPosition - retainedCount;

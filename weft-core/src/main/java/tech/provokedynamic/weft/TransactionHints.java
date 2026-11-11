@@ -27,7 +27,7 @@ public record TransactionHints(
     }
 
     /**
-     * Creates metrics with the total derived from read and write counts.
+     * Creates hints with the total derived from read and write counts.
      *
      * @param readOps non-negative read count
      * @param writeOps non-negative write count

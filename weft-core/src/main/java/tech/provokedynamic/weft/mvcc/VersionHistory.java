@@ -1,23 +1,25 @@
 package tech.provokedynamic.weft.mvcc;
 
+import org.jspecify.annotations.Nullable;
+
 import tech.provokedynamic.weft.exception.VersionEvictedException;
 
 /**
  * Bounded version storage with explicit capacity changes.
  * Callers must coordinate readers with concurrent writes and resizing.
  *
- * @param <T> stored value type
+ * @param <T> stored value type, including its nullability
  */
-public sealed interface VersionHistory<T> permits CircularVersionHistory {
+public sealed interface VersionHistory<T extends @Nullable Object> permits CircularVersionHistory {
 
     /**
      * Finds the newest retained value whose version is at most the requested read point.
      *
-     * @param readPoint maximum visible version
-     * @return the retained value, which may be null
+     * @param readVersion maximum visible version
+     * @return the retained value, which may be null when {@code T} is nullable
      * @throws VersionEvictedException if the point predates the retained history
      */
-    T scan(long readPoint);
+    T scan(long readVersion);
 
     /**
      * Appends a value and its commit version, evicting the oldest entry when full.
