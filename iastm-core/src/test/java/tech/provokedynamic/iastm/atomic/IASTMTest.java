@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,16 +40,14 @@ class IASTMTest {
         }
 
         @Test
-        @DisplayName("write is visible outside transaction before commit")
+        @DisplayName("writes remain buffered until commit")
         void writeVisibleBeforeCommit() {
             TVar<Integer> v = new TVar<>(1);
-            // raw field access: the value must not change until commit
             IASTM.start(() -> {
                 IASTM.write(v, 99);
-                // inside the tx, read sees the buffered value
-                assertThat(IASTM.read(v)).isEqualTo(99); // no; read-set returns live value
+                assertThat(IASTM.read(v)).isEqualTo(99);
+                assertThat(v.value).isEqualTo(1);
             });
-            // after commit, it should be 99
             assertThat(v.value).isEqualTo(99);
         }
 
@@ -81,7 +81,6 @@ class IASTMTest {
 
             IASTM.start(() -> {
                 IASTM.write(outer, 1);
-                // nested tx – should succeed sharing the outer scoped strategy
                 IASTM.start(() -> IASTM.write(inner, 2));
             });
 
@@ -116,7 +115,7 @@ class IASTMTest {
         @DisplayName("pessimistic strategy selected via metrics – write is visible")
         void pessimisticViaMetrics() {
             TVar<Long> v = new TVar<>(0L);
-            TxMetrics metrics = new TxMetrics(1, 9); // 90% writes → PESSIMISTIC
+            TxMetrics metrics = new TxMetrics(1, 9);
             IASTM.start(() -> IASTM.write(v, 42L), metrics);
             AtomicReference<Long> out = new AtomicReference<>();
             IASTM.start(() -> out.set(IASTM.read(v)));
@@ -127,7 +126,7 @@ class IASTMTest {
         @DisplayName("optimistic strategy selected via read-heavy metrics")
         void optimisticViaMetrics() {
             TVar<String> v = new TVar<>("x");
-            TxMetrics metrics = new TxMetrics(9, 1); // 90% reads → OPTIMISTIC
+            TxMetrics metrics = new TxMetrics(9, 1);
             AtomicReference<String> out = new AtomicReference<>();
             IASTM.start(() -> out.set(IASTM.read(v)), metrics);
             assertThat(out.get()).isEqualTo("x");
@@ -163,18 +162,10 @@ class IASTMTest {
         private static final int THREADS = 8;
         private static final int OPS_PER_THREAD = 500;
 
-        private static void awaitQuietly(CountDownLatch latch) {
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
         @Test
         @DisplayName("concurrent increments produce correct final sum (optimistic)")
         @Timeout(30)
-        void concurrentIncrementOptimistic() throws InterruptedException {
+        void concurrentIncrementOptimistic() throws Exception {
             TVar<Integer> counter = new TVar<>(0);
             runConcurrentIncrements(counter, null);
             AtomicInteger result = new AtomicInteger();
@@ -185,7 +176,7 @@ class IASTMTest {
         @Test
         @DisplayName("concurrent increments produce correct final sum (pessimistic)")
         @Timeout(30)
-        void concurrentIncrementPessimistic() throws InterruptedException {
+        void concurrentIncrementPessimistic() throws Exception {
             TVar<Integer> counter = new TVar<>(0);
             TxMetrics writeHeavy = new TxMetrics(1, 9);
             runConcurrentIncrements(counter, writeHeavy);
@@ -197,86 +188,79 @@ class IASTMTest {
         @Test
         @DisplayName("snapshot isolation: reader sees consistent state mid-write")
         @Timeout(10)
-        void snapshotIsolation() throws InterruptedException {
+        void snapshotIsolation() throws Exception {
             TVar<Integer> a = new TVar<>(10);
             TVar<Integer> b = new TVar<>(10);
-            // invariant: a + b == 20 always
             List<Integer> sums = new CopyOnWriteArrayList<>();
-
-            CountDownLatch start = new CountDownLatch(1);
-            int readers = 4, writers = 4;
-            List<Thread> threads = new ArrayList<>();
-
-            for (int i = 0; i < writers; i++) {
-                threads.add(Thread.ofVirtual().start(() -> {
-                    awaitQuietly(start);
+            List<Runnable> tasks = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                tasks.add(() -> {
                     for (int j = 0; j < 200; j++) {
                         IASTM.start(() -> {
-                            int av = IASTM.read(a);
-                            IASTM.write(a, av + 1);
-                            int bv = IASTM.read(b);
-                            IASTM.write(b, bv - 1);
+                            IASTM.write(a, IASTM.read(a) + 1);
+                            IASTM.write(b, IASTM.read(b) - 1);
                         });
                     }
-                }));
-            }
-
-            for (int i = 0; i < readers; i++) {
-                threads.add(Thread.ofVirtual().start(() -> {
-                    awaitQuietly(start);
+                });
+                tasks.add(() -> {
                     for (int j = 0; j < 200; j++) {
-                        IASTM.start(() -> {
-                            int sum = IASTM.read(a) + IASTM.read(b);
-                            sums.add(sum);
-                        });
+                        int[] sum = new int[1];
+                        IASTM.start(() -> sum[0] = IASTM.read(a) + IASTM.read(b));
+                        sums.add(sum[0]);
                     }
-                }));
+                });
             }
-
-            start.countDown();
-            for (Thread t : threads) t.join();
-
-            assertThat(sums).allMatch(s -> s == 20,
-                    "Every snapshot must observe a + b == 20");
+            runConcurrently(tasks);
+            assertThat(sums).hasSize(800).allMatch(sum -> sum == 20,
+                    "Every committed snapshot must observe a + b == 20");
         }
 
         @Test
         @DisplayName("no lost updates under high contention")
         @Timeout(30)
-        void noLostUpdates() throws InterruptedException {
-            TVar<Long> v = new TVar<>(0L);
+        void noLostUpdates() throws Exception {
+            TVar<Long> variable = new TVar<>(0L);
             int threads = 16, ops = 200;
-            List<Thread> ts = new ArrayList<>();
-
+            List<Runnable> tasks = new ArrayList<>();
             for (int i = 0; i < threads; i++) {
-                ts.add(Thread.ofVirtual().start(() -> {
+                tasks.add(() -> {
                     for (int j = 0; j < ops; j++) {
-                        IASTM.start(() -> IASTM.write(v, IASTM.read(v) + 1L));
+                        IASTM.start(() -> IASTM.write(variable, IASTM.read(variable) + 1L));
                     }
-                }));
+                });
             }
-            for (Thread t : ts) t.join();
-
-            AtomicReference<Long> result = new AtomicReference<>();
-            IASTM.start(() -> result.set(IASTM.read(v)));
-            assertThat(result.get()).isEqualTo((long) threads * ops);
+            runConcurrently(tasks);
+            IASTM.start(() -> assertThat(IASTM.read(variable)).isEqualTo((long) threads * ops));
         }
 
-        private void runConcurrentIncrements(TVar<Integer> counter, TxMetrics metrics)
-                throws InterruptedException {
-            List<Thread> threads = new ArrayList<>();
+        private void runConcurrentIncrements(TVar<Integer> counter, TxMetrics metrics) throws Exception {
+            List<Runnable> tasks = new ArrayList<>();
             for (int i = 0; i < THREADS; i++) {
-                threads.add(Thread.ofVirtual().start(() -> {
+                tasks.add(() -> {
                     for (int j = 0; j < OPS_PER_THREAD; j++) {
-                        if (metrics == null) {
-                            IASTM.start(() -> IASTM.write(counter, IASTM.read(counter) + 1));
-                        } else {
-                            IASTM.start(() -> IASTM.write(counter, IASTM.read(counter) + 1), metrics);
-                        }
+                        Runnable increment = () -> IASTM.write(counter, IASTM.read(counter) + 1);
+                        if (metrics == null) IASTM.start(increment);
+                        else IASTM.start(increment, metrics);
                     }
-                }));
+                });
             }
-            for (Thread t : threads) t.join();
+            runConcurrently(tasks);
+        }
+
+        private static void runConcurrently(List<Runnable> tasks) throws Exception {
+            CountDownLatch start = new CountDownLatch(1);
+            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                List<Future<?>> futures = new ArrayList<>();
+                for (Runnable task : tasks) {
+                    futures.add(executor.submit(() -> {
+                        start.await();
+                        task.run();
+                        return null;
+                    }));
+                }
+                start.countDown();
+                for (Future<?> future : futures) future.get();
+            }
         }
     }
 
@@ -303,7 +287,6 @@ class IASTMTest {
         @Test
         @DisplayName("read-heavy threshold: 80% reads → OPTIMISTIC")
         void readHeavy80Percent() {
-            // 8 reads / 10 total = 80 % → OPTIMISTIC
             TVar<Integer> v = new TVar<>(1);
             TxMetrics metrics = new TxMetrics(8, 2);
             AtomicInteger out = new AtomicInteger();
@@ -315,7 +298,7 @@ class IASTMTest {
         @DisplayName("write-heavy threshold: 60% writes → PESSIMISTIC")
         void writeHeavy60Percent() {
             TVar<Integer> v = new TVar<>(0);
-            TxMetrics metrics = new TxMetrics(4, 6); // 60% writes
+            TxMetrics metrics = new TxMetrics(4, 6);
             IASTM.start(() -> IASTM.write(v, 77), metrics);
             assertThat(v.value).isEqualTo(77);
         }
@@ -324,7 +307,7 @@ class IASTMTest {
         @DisplayName("mixed (50/50) falls back to OPTIMISTIC")
         void mixedFallsBackToOptimistic() {
             TVar<Integer> v = new TVar<>(3);
-            TxMetrics metrics = new TxMetrics(5, 5); // 50/50
+            TxMetrics metrics = new TxMetrics(5, 5);
             AtomicInteger out = new AtomicInteger();
             IASTM.start(() -> out.set(IASTM.read(v)), metrics);
             assertThat(out.get()).isEqualTo(3);

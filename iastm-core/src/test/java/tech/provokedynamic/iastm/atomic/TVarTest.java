@@ -43,13 +43,13 @@ class TVarTest {
     }
 
     @Test
-    @DisplayName("trySteal returns false when another thread holds the lock")
-    void tryStealReturnsFalseWhenLocked() throws InterruptedException {
+    @DisplayName("tryAcquireWriteLock returns false when another thread holds the lock")
+    void tryAcquireWriteLockReturnsFalseWhenLocked() throws InterruptedException {
         TVar<Integer> v = new TVar<>(0);
         v.lock.lock();
         try {
             AtomicReference<Boolean> stole = new AtomicReference<>();
-            Thread t = Thread.ofVirtual().start(() -> stole.set(v.trySteal()));
+            Thread t = Thread.ofVirtual().start(() -> stole.set(v.tryAcquireWriteLock()));
             t.join(1_000);
             assertThat(stole.get()).isFalse();
         } finally {
@@ -58,9 +58,9 @@ class TVarTest {
     }
 
     @Test
-    @DisplayName("unsteal is idempotent when lock not held")
-    void unstealIdempotent() {
+    @DisplayName("releaseWriteLock is idempotent when lock not held")
+    void releaseWriteLockIdempotent() {
         TVar<Integer> v = new TVar<>(0);
-        assertThatCode(v::unsteal).doesNotThrowAnyException();
+        assertThatCode(v::releaseWriteLock).doesNotThrowAnyException();
     }
 }
