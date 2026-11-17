@@ -1,5 +1,4 @@
-<!-- Upload your banner here using GitHub's README editor. -->
-
+<img width="2172" height="724" alt="weft-banner" src="https://github.com/user-attachments/assets/b062cc19-2ff3-4d18-8480-221fcdc6cd9f" />
 
 **Transactional memory for Java**
 
