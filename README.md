@@ -1,10 +1,12 @@
-<img width="2172" height="724" alt="weft-banner" src="https://github.com/user-attachments/assets/b062cc19-2ff3-4d18-8480-221fcdc6cd9f" />
+<img width="2172" height="724" alt="Weft — concurrent threads woven together" src="https://github.com/user-attachments/assets/b062cc19-2ff3-4d18-8480-221fcdc6cd9f" />
 
 **Transactional memory for Java**
 
-Weft is a transactional memory library for **Java 25**. Transactions buffer changes to
-shared `TVar<T>` values and commit them together after validation. Conflicting attempts
-are retried automatically.
+Update related values in one transaction. Weft buffers changes to shared `TVar<T>`
+values, validates reads, and commits the changes together. Conflicting attempts retry
+automatically.
+
+Requires **Java 25**, with no preview flags.
 
 The core library defaults to optimistic locking. An optional Java agent analyzes read/write
 call sites so the runtime can choose between optimistic and pessimistic write locking.
@@ -31,6 +33,29 @@ call sites so the runtime can choose between optimistic and pessimistic write lo
 
 ## Quick start
 
+### Add the library
+
+Build and install the core library from this checkout into your local Maven repository:
+
+```bash
+./mvnw -pl weft-core -am install
+```
+
+Then add it to your application's `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>tech.provokedynamic</groupId>
+    <artifactId>weft-core</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+The core works on its own. Add the [instrumentation agent](#instrumentation-agent)
+when you want automatic workload hints.
+
+### Write a transaction
+
 Wrap related reads and writes in `Weft.atomic`. For example, transfer a balance between
 two accounts in one transaction:
 
@@ -53,6 +78,14 @@ Weft.atomic(() -> {
 Reads within the transaction see its buffered writes, including `null` values. Other
 transactions can observe the new values after a successful commit.
 
+### Keep transaction bodies safe to retry
+
+Bodies may execute more than once. Keep I/O and irreversible side effects outside them,
+and publish computed results after `atomic` returns. Store immutable values or replace
+objects through `Weft.write`; mutating a returned object directly bypasses buffering.
+
+### Work with nullable values
+
 Payload nullability follows the type argument. The core uses JSpecify annotations;
 declare a nullable type argument when a variable may hold `null`, even if its initial
 value is non-null:
@@ -66,10 +99,6 @@ Weft.atomic(() -> Weft.write(label, null));
 
 Reads of this variable have type `@Nullable String`. A `TVar<String>` expresses a
 non-null string payload to nullness analysis tools.
-
-Bodies may execute more than once. Keep I/O and irreversible side effects outside them,
-and publish computed results after `atomic` returns. Store immutable values or replace
-objects through `Weft.write`; mutating a returned object directly bypasses buffering.
 
 ## Build and test
 
@@ -105,6 +134,10 @@ and plugin versions are centralized in
 [`pom.xml`](pom.xml). Generated JMH harness classes are excluded from API documentation.
 
 ## Architecture
+
+The project has three modules: the transaction runtime, an optional instrumentation
+agent, and a JMH benchmark suite. The runtime manages each attempt's snapshot,
+buffered writes, validation, and cleanup.
 
 ```mermaid
 flowchart LR
@@ -151,6 +184,9 @@ Applications use `Weft`, `TVar<T>`, and `TransactionHints`. `TransactionContext`
 `Transaction`, and the `ConcurrencyProtocol` enum are package-private implementation types.
 The enum has two strategies: `OPTIMISTIC` and `PESSIMISTIC_WRITE`.
 
+<details>
+<summary>Implementation components and terminology</summary>
+
 Naming follows established STM terminology: [`TVar`](https://downloads.haskell.org/~ghc/6.6/docs/html/libraries/stm/Control-Concurrent-STM-TVar.html)
 for transactional variables, and [TL2](https://people.csail.mit.edu/shanir/publications/Transactional_Locking.pdf)
 terms such as `readVersion`, `readSet`, and `writeSet` for transaction state.
@@ -167,6 +203,8 @@ terms such as `readVersion`, `readSet`, and `writeSet` for transaction state.
 | [`CircularVersionHistory<T>`](weft-core/src/main/java/tech/provokedynamic/weft/mvcc/CircularVersionHistory.java) | Bounded circular history with binary-search lookup                            |
 | [`Clock`](weft-core/src/main/java/tech/provokedynamic/weft/atomic/Clock.java)                                    | Independent `AtomicLong` counters for commit versions and variable identities |
 | [`AdaptiveBackoff`](weft-core/src/main/java/tech/provokedynamic/weft/retry/AdaptiveBackoff.java)                 | Retry delays with exponential parking and jitter                              |
+
+</details>
 
 ## Transaction behavior
 
@@ -466,7 +504,8 @@ the earlier values. These are observed differences between runs. Several code
 changes occurred between them, and machine details and source revisions were not
 captured with the results, so they do not isolate the effect of any individual change.
 
-The command used for this run was:
+<details>
+<summary>Reproduce the recorded run</summary>
 
 ```bash
 mkdir -p benchmark-results
@@ -478,6 +517,8 @@ java -jar weft-benchmark/target/benchmarks.jar \
      -rf json -rff benchmark-results/current.json \
      | tee benchmark-results/current.log
 ```
+
+</details>
 
 <details>
 <summary>Earlier baseline</summary>
